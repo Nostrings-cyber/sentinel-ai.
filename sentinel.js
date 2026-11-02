@@ -40,13 +40,48 @@ export async function inspectNearAccount(accountId) {
         message: "Account could not be found on NEAR."
       };
     }
+    let keyInfo = {
+  total: 0,
+  fullAccess: 0
+};
 
+try {
+  const keyResponse = await fetch(NEAR_RPC, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: "sentinel-keys",
+      method: "query",
+      params: {
+        request_type: "view_access_key_list",
+        finality: "final",
+        account_id: id
+      }
+    })
+  });
+
+  const keyData = await keyResponse.json();
+
+  if (!keyData.error && keyData.result) {
+    keyInfo.total = keyData.result.keys.length;
+    keyInfo.fullAccess = keyData.result.keys.filter(
+      key => key.access_key.permission === "FullAccess"
+    ).length;
+  }
+} catch (error) {
+  console.log("Access-key check unavailable:", error);
+}
     return {
       status: "FOUND",
       accountId: id,
       balance: data.result.amount,
       storageUsage: data.result.storage_usage,
       blockHeight: data.result.block_height,
+      accessKeyCount: keyInfo.total,
+      fullAccessKeyCount: keyInfo.fullAccess,
       message: "Account found. Further security checks are required."
     };
 
