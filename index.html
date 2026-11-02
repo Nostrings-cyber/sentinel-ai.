@@ -1,55 +1,158 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SENTINEL AI</title>
-  <style>
-    body {
-      background: #080d18;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px 15px;
-    }
-
-    .shield {
-      font-size: 65px;
-    }
-
-    h1 {
-      color: #55aaff;
-    }
-
-    .panel {
-      background: #141e30;
-      padding: 20px;
-      margin: 25px auto;
-      border-radius: 15px;
-      max-width: 400px;
-    }
-
-    .status {
-      color: #42e69a;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTINEL AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:20px;
+  background:#07111f;
+  color:#eaf2ff;
+  font-family:Arial,sans-serif;
+}
+.container{max-width:650px;margin:auto}
+header{text-align:center;padding:25px 10px}
+.logo{font-size:48px}
+h1{letter-spacing:5px;margin:10px 0;color:#54d6ff}
+.subtitle{color:#8da6c5;font-size:14px}
+.panel{
+  background:#101f33;
+  border:1px solid #203954;
+  border-radius:14px;
+  padding:20px;
+  margin:16px 0;
+}
+.status{color:#43e6a2;font-size:13px}
+label{display:block;margin-bottom:10px;font-weight:bold}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:8px;
+  border:1px solid #35516e;
+  background:#07111f;
+  color:white;
+  font-size:15px;
+}
+button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  background:#087eae;
+  border:0;
+  border-radius:8px;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+}
+button:active{opacity:.7}
+.result{
+  display:none;
+  margin-top:18px;
+  padding:18px;
+  border-radius:10px;
+  background:#07111f;
+}
+.result h2{margin-top:0}
+.safe{color:#43e6a2}
+.warn{color:#ffca62}
+.block{color:#ff647c}
+.small{color:#91a8c5;font-size:12px;line-height:1.6}
+.feature{padding:12px 0;border-bottom:1px solid #203954}
+footer{text-align:center;color:#7189a7;font-size:12px;padding:25px}
+</style>
 </head>
 <body>
+<div class="container">
 
-  <div class="shield">🛡️</div>
-
+<header>
+  <div class="logo">🛡️</div>
   <h1>SENTINEL AI</h1>
+  <p class="subtitle">Your AI Agent's Security Guardian</p>
+  <p class="status">● SYSTEM ONLINE</p>
+</header>
 
-  <p>Your AI agent's security guardian.</p>
+<div class="panel">
+  <h3>TRANSACTION INSPECTOR</h3>
+  <p class="small">Enter a NEAR account ID to run a basic prototype check.</p>
 
-  <div class="panel">
-    <h2>Security Status</h2>
-    <p class="status">SYSTEM ONLINE</p>
-    <p>Waiting for a transaction to inspect...</p>
+  <label for="account">Recipient Account</label>
+  <input id="account" placeholder="example.near" autocomplete="off">
+
+  <button onclick="inspectAccount()">INSPECT ACCOUNT</button>
+
+  <div class="result" id="result">
+    <h2 id="decision"></h2>
+    <p id="message"></p>
+    <p class="small" id="details"></p>
   </div>
+</div>
 
-  <p>Protecting the NEAR ecosystem.</p>
+<div class="panel">
+  <h3>SECURITY DECISIONS</h3>
+  <div class="feature"><span class="safe">● ALLOW</span><br><span class="small">No obvious prototype warning detected.</span></div>
+  <div class="feature"><span class="warn">● WARN</span><br><span class="small">Further investigation is recommended.</span></div>
+  <div class="feature"><span class="block">● BLOCK</span><br><span class="small">A high-risk pattern was detected.</span></div>
+</div>
 
+<div class="panel">
+  <h3>ABOUT SENTINEL</h3>
+  <p class="small">
+    Sentinel AI is a security prototype designed to help protect
+    autonomous agents interacting with the NEAR blockchain.
+    Its goal is to identify suspicious recipients before transactions happen.
+  </p>
+</div>
+
+<footer>
+  SENTINEL AI · NEAR SECURITY HACKATHON<br>
+  Prototype version 0.1
+</footer>
+
+</div>
+
+<script>
+function inspectAccount(){
+  const account=document.getElementById("account").value.trim().toLowerCase();
+  const result=document.getElementById("result");
+  const decision=document.getElementById("decision");
+  const message=document.getElementById("message");
+  const details=document.getElementById("details");
+
+  result.style.display="block";
+
+  if(!account){
+    decision.textContent="⚠️ INPUT REQUIRED";
+    decision.className="warn";
+    message.textContent="Enter an account ID first.";
+    details.textContent="";
+    return;
+  }
+
+  if(!/^[a-z0-9._-]+$/.test(account)){
+    decision.textContent="⚠️ INVALID FORMAT";
+    decision.className="warn";
+    message.textContent="This does not look like a valid NEAR account ID.";
+    details.textContent="Check the spelling and try again.";
+    return;
+  }
+
+  if(account.includes("scam") || account.includes("fraud") || account.includes("fake")){
+    decision.textContent="⛔ BLOCK";
+    decision.className="block";
+    message.textContent="Suspicious words detected in this demo check.";
+    details.textContent="This is only a demonstration rule, not verified threat intelligence.";
+    return;
+  }
+
+  decision.textContent="⚠️ WARN";
+  decision.className="warn";
+  message.textContent="Account format looks acceptable, but its safety is UNKNOWN.";
+  details.textContent="No live blockchain, contract, or threat-registry checks have been performed.";
+}
+</script>
 </body>
 </html>
