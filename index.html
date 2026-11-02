@@ -140,6 +140,8 @@ async function inspectAccount(){
         "Balance: " + data.balance +
         " yoctoNEAR | Storage: " + data.storageUsage +
         " bytes | Block: " + data.blockHeight +
+        " | Access keys: " + data.accessKeyCount +
+        " | Full-access keys: " + data.fullAccessKeyCount +
         ". Account existence does not prove safety.";
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "⚠️ WARN";
