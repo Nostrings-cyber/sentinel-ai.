@@ -115,44 +115,50 @@ footer{text-align:center;color:#7189a7;font-size:12px;padding:25px}
 </div>
 
 <script>
-function inspectAccount(){
-  const account=document.getElementById("account").value.trim().toLowerCase();
-  const result=document.getElementById("result");
-  const decision=document.getElementById("decision");
-  const message=document.getElementById("message");
-  const details=document.getElementById("details");
+async function inspectAccount(){
+  const account = document.getElementById("account").value.trim();
+  const result = document.getElementById("result");
+  const decision = document.getElementById("decision");
+  const message = document.getElementById("message");
+  const details = document.getElementById("details");
 
-  result.style.display="block";
+  result.style.display = "block";
+  decision.textContent = "🔄 INSPECTING...";
+  decision.className = "warn";
+  message.textContent = "Contacting the NEAR network...";
+  details.textContent = "";
 
-  if(!account){
-    decision.textContent="⚠️ INPUT REQUIRED";
-    decision.className="warn";
-    message.textContent="Enter an account ID first.";
-    details.textContent="";
-    return;
+  try {
+    const { inspectNearAccount } = await import("./sentinel.js");
+    const data = await inspectNearAccount(account);
+
+    if (data.status === "FOUND") {
+      decision.textContent = "⚠️ WARN";
+      decision.className = "warn";
+      message.textContent = "NEAR account found!";
+      details.textContent =
+        "Balance: " + data.balance +
+        " yoctoNEAR | Storage: " + data.storageUsage +
+        " bytes | Block: " + data.blockHeight +
+        ". Account existence does not prove safety.";
+    } else if (data.status === "NOT_FOUND") {
+      decision.textContent = "⚠️ WARN";
+      decision.className = "warn";
+      message.textContent = "Account not found on NEAR.";
+      details.textContent = "Do not assume an account is malicious just because it was not found.";
+    } else {
+      decision.textContent = "⚠️ CHECK FAILED";
+      decision.className = "warn";
+      message.textContent = data.message;
+      details.textContent = "Try again later.";
+    }
+  } catch (error) {
+    decision.textContent = "⚠️ ERROR";
+    decision.className = "warn";
+    message.textContent = "Could not load Sentinel's inspection engine.";
+    details.textContent = error.message;
   }
-
-  if(!/^[a-z0-9._-]+$/.test(account)){
-    decision.textContent="⚠️ INVALID FORMAT";
-    decision.className="warn";
-    message.textContent="This does not look like a valid NEAR account ID.";
-    details.textContent="Check the spelling and try again.";
-    return;
-  }
-
-  if(account.includes("scam") || account.includes("fraud") || account.includes("fake")){
-    decision.textContent="⛔ BLOCK";
-    decision.className="block";
-    message.textContent="Suspicious words detected in this demo check.";
-    details.textContent="This is only a demonstration rule, not verified threat intelligence.";
-    return;
-  }
-
-  decision.textContent="⚠️ WARN";
-  decision.className="warn";
-  message.textContent="Account format looks acceptable, but its safety is UNKNOWN.";
-  details.textContent="No live blockchain, contract, or threat-registry checks have been performed.";
-}
+        }
 </script>
 </body>
 </html>
