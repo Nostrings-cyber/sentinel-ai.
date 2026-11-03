@@ -97,6 +97,19 @@ export function calculateRiskScore(signals = {}) {
   let score = 0;
   const reasons = [];
 
+  const checks = [
+    "knownMalicious",
+    "suspiciousCodeChange",
+    "unusualActivity",
+    "suspiciousHistory",
+    "riskyAccessKeys",
+    "failedInteractions"
+  ];
+
+  const unknownSignals = checks.filter(
+    key => typeof signals[key] !== "boolean"
+  );
+
   if (signals.knownMalicious === true) {
     score = 100;
     reasons.push("Receiver is on the malicious blocklist.");
@@ -133,13 +146,15 @@ export function calculateRiskScore(signals = {}) {
 
   if (score >= 70) {
     decision = "BLOCK";
-  } else if (score >= 30) {
+  } else if (score >= 30 || unknownSignals.length > 0) {
     decision = "WARN";
+    reasons.push("Some security checks are incomplete.");
   }
 
   return {
     score,
     decision,
-    reasons
+    reasons,
+    unknownSignals
   };
 }
