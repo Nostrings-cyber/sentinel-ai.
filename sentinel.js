@@ -92,3 +92,54 @@ try {
     };
   }
 }
+
+export function calculateRiskScore(signals = {}) {
+  let score = 0;
+  const reasons = [];
+
+  if (signals.knownMalicious === true) {
+    score = 100;
+    reasons.push("Receiver is on the malicious blocklist.");
+  } else {
+    if (signals.suspiciousCodeChange === true) {
+      score += 25;
+      reasons.push("Suspicious contract code change.");
+    }
+
+    if (signals.unusualActivity === true) {
+      score += 20;
+      reasons.push("Unusual transaction activity.");
+    }
+
+    if (signals.suspiciousHistory === true) {
+      score += 15;
+      reasons.push("Suspicious account history.");
+    }
+
+    if (signals.riskyAccessKeys === true) {
+      score += 15;
+      reasons.push("Risky access-key configuration.");
+    }
+
+    if (signals.failedInteractions === true) {
+      score += 10;
+      reasons.push("Previous failed interactions.");
+    }
+  }
+
+  score = Math.min(score, 100);
+
+  let decision = "ALLOW";
+
+  if (score >= 70) {
+    decision = "BLOCK";
+  } else if (score >= 30) {
+    decision = "WARN";
+  }
+
+  return {
+    score,
+    decision,
+    reasons
+  };
+}
