@@ -150,7 +150,7 @@ export function calculateRiskScore(signals = {}) {
     decision = "WARN";
     reasons.push("Some security checks are incomplete.");
   }
-
+  
   return {
     score,
     decision,
