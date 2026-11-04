@@ -132,16 +132,35 @@ async function inspectAccount(){
     const {
   inspectNearAccount,
   calculateRiskScore,
-  detectNearContract
+  detectNearContract,
+  compareContractHash
 } = await import("./sentinel.js");
     const data = await inspectNearAccount(account);
 
 
     if (data.status === "FOUND") {
 const contract = await detectNearContract(account);
+let contractHistory = {
+  status: "NOT_APPLICABLE",
+  message: "No contract fingerprint available."
+};
+
+if (contract.status === "FOUND") {
+  contractHistory = compareContractHash(
+    account,
+    contract.codeHash
+  );
+}
       const risk = calculateRiskScore({
   knownMalicious: undefined,
-  suspiciousCodeChange: undefined,
+
+  suspiciousCodeChange:
+    contractHistory.status === "CHANGED"
+      ? true
+      : ["BASELINE_SET", "UNCHANGED"].includes(contractHistory.status)
+        ? false
+        : undefined,
+
   unusualActivity: undefined,
   suspiciousHistory: undefined,
   riskyAccessKeys: undefined,
@@ -161,12 +180,15 @@ details.textContent =
   " | Access keys: " + data.accessKeyCount +
   " | Full-access keys: " + data.fullAccessKeyCount +
   " | " + risk.reasons.join(" ") +
-" | Contract: " +
-(contract.status === "FOUND"
-  ? "Detected"
-  : contract.status === "NO_CONTRACT"
-    ? "No deployed code"
-    : "Could not verify");
+  " | Contract: " +
+  (contract.status === "FOUND"
+    ? "Detected"
+    : contract.status === "NO_CONTRACT"
+      ? "No deployed code"
+      : "Could not verify") +
+  " | Contract history: " +
+  contractHistory.status +
+  " (" + contractHistory.message + ")";
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "⚠️ WARN";
       decision.className = "warn";
