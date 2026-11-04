@@ -129,11 +129,16 @@ async function inspectAccount(){
   details.textContent = "";
 
   try {
-    const { inspectNearAccount, calculateRiskScore } =
-  await import("./sentinel.js");
+    const {
+  inspectNearAccount,
+  calculateRiskScore,
+  detectNearContract
+} = await import("./sentinel.js");
     const data = await inspectNearAccount(account);
 
+
     if (data.status === "FOUND") {
+const contract = await detectNearContract(account);
       const risk = calculateRiskScore({
   knownMalicious: undefined,
   suspiciousCodeChange: undefined,
@@ -146,7 +151,8 @@ async function inspectAccount(){
 decision.textContent = "⚠️ " + risk.decision;
 decision.className = risk.decision.toLowerCase();
 
-message.textContent = "NEAR account found. Risk score: " + risk.score;
+message.textContent =
+  "NEAR account found. Risk score: " + risk.score;
 
 details.textContent =
   "Balance: " + data.balance +
@@ -154,7 +160,13 @@ details.textContent =
   " bytes | Block: " + data.blockHeight +
   " | Access keys: " + data.accessKeyCount +
   " | Full-access keys: " + data.fullAccessKeyCount +
-  " | " + risk.reasons.join(" ");
+  " | " + risk.reasons.join(" ") +
+" | Contract: " +
+(contract.status === "FOUND"
+  ? "Detected"
+  : contract.status === "NO_CONTRACT"
+    ? "No deployed code"
+    : "Could not verify");
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "⚠️ WARN";
       decision.className = "warn";
