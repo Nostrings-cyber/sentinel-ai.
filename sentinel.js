@@ -158,3 +158,68 @@ export function calculateRiskScore(signals = {}) {
     unknownSignals
   };
 }
+export async function detectNearContract(accountId) {
+  const NEAR_RPC = "https://rpc.mainnet.near.org";
+
+  if (!accountId || typeof accountId !== "string") {
+    return {
+      status: "ERROR",
+      message: "Invalid account ID."
+    };
+  }
+
+  try {
+    const response = await fetch(NEAR_RPC, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "sentinel-contract-check",
+        method: "query",
+        params: {
+          request_type: "view_code",
+          finality: "final",
+          account_id: accountId
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      const errorText = JSON.stringify(data.error);
+
+      if (
+  errorText.toLowerCase().includes("contract code not found") ||
+  errorText.toLowerCase().includes("no contract code")
+) {
+        return {
+          status: "NO_CONTRACT",
+          hasContract: false,
+          message: "No deployed contract code found."
+        };
+      }
+
+      return {
+        status: "ERROR",
+        message: "NEAR RPC could not verify contract code."
+      };
+    }
+
+    return {
+      status: "FOUND",
+      hasContract: true,
+      codeHash: data.result.hash,
+      blockHeight: data.result.block_height,
+      message: "Smart contract detected."
+    };
+
+  } catch (error) {
+    return {
+      status: "ERROR",
+      message: "Could not connect to NEAR RPC."
+    };
+  }
+}
