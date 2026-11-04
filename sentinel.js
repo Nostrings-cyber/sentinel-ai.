@@ -223,3 +223,49 @@ export async function detectNearContract(accountId) {
     };
   }
 }
+export function compareContractHash(accountId, currentHash) {
+  if (!accountId || !currentHash) {
+    return {
+      status: "ERROR",
+      message: "Missing account ID or contract hash."
+    };
+  }
+
+  const key = "sentinel_contract_" + accountId.toLowerCase();
+
+  try {
+    const previousHash = localStorage.getItem(key);
+
+    if (!previousHash) {
+      localStorage.setItem(key, currentHash);
+
+      return {
+        status: "BASELINE_SET",
+        changed: false,
+        message: "Initial contract fingerprint recorded."
+      };
+    }
+
+    if (previousHash !== currentHash) {
+      return {
+        status: "CHANGED",
+        changed: true,
+        previousHash,
+        currentHash,
+        message: "Contract code hash has changed!"
+      };
+    }
+
+    return {
+      status: "UNCHANGED",
+      changed: false,
+      message: "Contract code matches recorded fingerprint."
+    };
+
+  } catch (error) {
+    return {
+      status: "ERROR",
+      message: "Could not access fingerprint storage."
+    };
+  }
+}
