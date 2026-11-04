@@ -129,20 +129,32 @@ async function inspectAccount(){
   details.textContent = "";
 
   try {
-    const { inspectNearAccount } = await import("./sentinel.js");
+    const { inspectNearAccount, calculateRiskScore } =
+  await import("./sentinel.js");
     const data = await inspectNearAccount(account);
 
     if (data.status === "FOUND") {
-      decision.textContent = "⚠️ WARN";
-      decision.className = "warn";
-      message.textContent = "NEAR account found!";
-      details.textContent =
-        "Balance: " + data.balance +
-        " yoctoNEAR | Storage: " + data.storageUsage +
-        " bytes | Block: " + data.blockHeight +
-        " | Access keys: " + data.accessKeyCount +
-        " | Full-access keys: " + data.fullAccessKeyCount +
-        ". Account existence does not prove safety.";
+      const risk = calculateRiskScore({
+  knownMalicious: undefined,
+  suspiciousCodeChange: undefined,
+  unusualActivity: undefined,
+  suspiciousHistory: undefined,
+  riskyAccessKeys: undefined,
+  failedInteractions: undefined
+});
+
+decision.textContent = "⚠️ " + risk.decision;
+decision.className = risk.decision.toLowerCase();
+
+message.textContent = "NEAR account found. Risk score: " + risk.score;
+
+details.textContent =
+  "Balance: " + data.balance +
+  " yoctoNEAR | Storage: " + data.storageUsage +
+  " bytes | Block: " + data.blockHeight +
+  " | Access keys: " + data.accessKeyCount +
+  " | Full-access keys: " + data.fullAccessKeyCount +
+  " | " + risk.reasons.join(" ");
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "⚠️ WARN";
       decision.className = "warn";
