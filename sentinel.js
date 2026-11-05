@@ -29,7 +29,9 @@ export async function inspectNearAccount(accountId) {
     });
 
     
-
+if (!response.ok) {
+  throw new Error("NEAR account request failed.");
+}
     const data = await response.json();
 
     if (data.error) {
@@ -66,9 +68,7 @@ try {
   if (!keyResponse.ok) {
     throw new Error("Access-key request failed.");
   }
-if (!response.ok) {
-  throw new Error("NEAR contract request failed.");
-}
+
 
   const keyData = await keyResponse.json();
 
