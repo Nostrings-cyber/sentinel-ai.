@@ -28,9 +28,7 @@ export async function inspectNearAccount(accountId) {
       })
     });
 
-    if (!response.ok) {
-      throw new Error("NEAR network request failed.");
-    }
+    
 
     const data = await response.json();
 
