@@ -68,6 +68,9 @@ try {
   if (!keyResponse.ok) {
     throw new Error("Access-key request failed.");
   }
+if (!response.ok) {
+  throw new Error("NEAR contract request failed.");
+}
 
   const keyData = await keyResponse.json();
 
