@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -163,7 +162,10 @@ if (contract.status === "FOUND") {
 
   unusualActivity: undefined,
   suspiciousHistory: undefined,
-  riskyAccessKeys: undefined,
+  riskyAccessKeys:
+  data.accessKeyCheckAvailable
+    ? data.fullAccessKeyCount > 1
+    : undefined,
   failedInteractions: undefined
 });
 
@@ -177,8 +179,10 @@ details.textContent =
   "Balance: " + data.balance +
   " yoctoNEAR | Storage: " + data.storageUsage +
   " bytes | Block: " + data.blockHeight +
-  " | Access keys: " + data.accessKeyCount +
-  " | Full-access keys: " + data.fullAccessKeyCount +
+" | Full-access keys: " + data.fullAccessKeyCount +
+" | Function-call keys: " + data.functionCallKeyCount +
+" | Access-key check: " +
+(data.accessKeyCheckAvailable ? "Available" : "Unavailable") +
   " | " + risk.reasons.join(" ") +
   " | Contract: " +
   (contract.status === "FOUND"
