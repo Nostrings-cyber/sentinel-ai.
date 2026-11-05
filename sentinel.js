@@ -42,7 +42,9 @@ export async function inspectNearAccount(accountId) {
     }
     let keyInfo = {
   total: 0,
-  fullAccess: 0
+  fullAccess: 0,
+  functionCall: 0,
+  available: false
 };
 
 try {
@@ -63,14 +65,31 @@ try {
     })
   });
 
+  if (!keyResponse.ok) {
+    throw new Error("Access-key request failed.");
+  }
+
   const keyData = await keyResponse.json();
 
-  if (!keyData.error && keyData.result) {
-    keyInfo.total = keyData.result.keys.length;
-    keyInfo.fullAccess = keyData.result.keys.filter(
-      key => key.access_key.permission === "FullAccess"
-    ).length;
+  if (keyData.error || !Array.isArray(keyData.result?.keys)) {
+    throw new Error("Access-key data unavailable.");
   }
+
+  const keys = keyData.result.keys;
+
+  keyInfo.total = keys.length;
+
+  keyInfo.fullAccess = keys.filter(
+    key => key.access_key?.permission === "FullAccess"
+  ).length;
+
+  keyInfo.functionCall = keys.filter(
+    key => typeof key.access_key?.permission === "object" &&
+      key.access_key.permission?.FunctionCall
+  ).length;
+
+  keyInfo.available = true;
+
 } catch (error) {
   console.log("Access-key check unavailable:", error);
 }
@@ -82,6 +101,8 @@ try {
       blockHeight: data.result.block_height,
       accessKeyCount: keyInfo.total,
       fullAccessKeyCount: keyInfo.fullAccess,
+      functionCallKeyCount: keyInfo.functionCall,
+      accessKeyCheckAvailable: keyInfo.available,
       message: "Account found. Further security checks are required."
     };
 
