@@ -1,4 +1,6 @@
+
 const NEAR_RPC = "https://rpc.mainnet.near.org";
+const FASTNEAR_RPC = "https://rpc.mainnet.fastnear.com";
 
 export async function inspectNearAccount(accountId) {
   const id = accountId.trim().toLowerCase();
@@ -11,6 +13,7 @@ export async function inspectNearAccount(accountId) {
   }
 
   try {
+    // 1. Retrieve account information
     const response = await fetch(NEAR_RPC, {
       method: "POST",
       headers: {
@@ -28,86 +31,162 @@ export async function inspectNearAccount(accountId) {
       })
     });
 
-    
-if (!response.ok) {
-  throw new Error("NEAR account request failed.");
-}
+    if (!response.ok) {
+      throw new Error("NEAR account request failed.");
+    }
+
     const data = await response.json();
 
-    if (data.error) {
+    if (data.error || !data.result) {
       return {
         status: "NOT_FOUND",
         message: "Account could not be found on NEAR."
       };
     }
+
+    // 2. Retrieve access keys from NEAR RPC
     let keyInfo = {
-  total: 0,
-  fullAccess: 0,
-  functionCall: 0,
-  available: false
-};
+      total: null,
+      fullAccess: null,
+      functionCall: null,
+      available: false
+    };
 
-try {
-  const keyResponse = await fetch(NEAR_RPC, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: "sentinel-keys",
-      method: "query",
-      params: {
-        request_type: "view_access_key_list",
-        finality: "final",
-        account_id: id
+    try {
+      const keyResponse = await fetch(NEAR_RPC, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "sentinel-keys",
+          method: "query",
+          params: {
+            request_type: "view_access_key_list",
+            finality: "final",
+            account_id: id
+          }
+        })
+      });
+
+      if (!keyResponse.ok) {
+        throw new Error("NEAR access-key request failed.");
       }
-    })
-  });
 
-  if (!keyResponse.ok) {
-    throw new Error("Access-key request failed.");
-  }
+      const keyData = await keyResponse.json();
 
+      if (
+        keyData.error ||
+        !Array.isArray(keyData.result?.keys)
+      ) {
+        throw new Error("NEAR access-key data unavailable.");
+      }
 
-  const keyData = await keyResponse.json();
+      const keys = keyData.result.keys;
 
-  if (keyData.error || !Array.isArray(keyData.result?.keys)) {
-    throw new Error("Access-key data unavailable.");
-  }
+      keyInfo.total = keys.length;
 
-  const keys = keyData.result.keys;
+      keyInfo.fullAccess = keys.filter(
+        key => key.access_key?.permission === "FullAccess"
+      ).length;
 
-  keyInfo.total = keys.length;
+      keyInfo.functionCall = keys.filter(
+        key =>
+          typeof key.access_key?.permission === "object" &&
+          key.access_key.permission?.FunctionCall
+      ).length;
 
-  keyInfo.fullAccess = keys.filter(
-    key => key.access_key?.permission === "FullAccess"
-  ).length;
+      keyInfo.available = true;
 
-  keyInfo.functionCall = keys.filter(
-    key => typeof key.access_key?.permission === "object" &&
-      key.access_key.permission?.FunctionCall
-  ).length;
+    } catch (error) {
+      console.log("NEAR access-key check:", error);
+    }
 
-  keyInfo.available = true;
+    // 3. Independently retrieve access keys from FastNEAR
+    let independentKeyInfo = {
+      total: null,
+      available: false
+    };
 
-} catch (error) {
-  console.log("Access-key check unavailable:", error);
-}
+    try {
+      const verifyResponse = await fetch(FASTNEAR_RPC, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "sentinel-verification",
+          method: "query",
+          params: {
+            request_type: "view_access_key_list",
+            finality: "final",
+            account_id: id
+          }
+        })
+      });
+
+      if (!verifyResponse.ok) {
+        throw new Error("FastNEAR request failed.");
+      }
+
+      const verifyData = await verifyResponse.json();
+
+      if (
+        verifyData.error ||
+        !Array.isArray(verifyData.result?.keys)
+      ) {
+        throw new Error("FastNEAR key data unavailable.");
+      }
+
+      independentKeyInfo.total =
+        verifyData.result.keys.length;
+
+      independentKeyInfo.available = true;
+
+    } catch (error) {
+      console.log("FastNEAR verification:", error);
+    }
+
+    // 4. Compare both results
+    let verificationStatus = "UNAVAILABLE";
+
+    if (
+      keyInfo.available &&
+      independentKeyInfo.available
+    ) {
+      verificationStatus =
+        keyInfo.total === independentKeyInfo.total
+          ? "MATCH"
+          : "MISMATCH";
+    }
+
+    // 5. Return results
     return {
       status: "FOUND",
       accountId: id,
       balance: data.result.amount,
       storageUsage: data.result.storage_usage,
       blockHeight: data.result.block_height,
+
       accessKeyCount: keyInfo.total,
       fullAccessKeyCount: keyInfo.fullAccess,
       functionCallKeyCount: keyInfo.functionCall,
       accessKeyCheckAvailable: keyInfo.available,
+
+      independentAccessKeyCount: independentKeyInfo.total,
+      independentAccessKeyCheckAvailable:
+        independentKeyInfo.available,
+
+      accessKeyVerification: verificationStatus,
+
       message: "Account found. Further security checks are required."
     };
 
   } catch (error) {
+    console.log("Account inspection failed:", error);
+
     return {
       status: "ERROR",
       message: "Could not connect to the NEAR network."
@@ -172,7 +251,7 @@ export function calculateRiskScore(signals = {}) {
     decision = "WARN";
     reasons.push("Some security checks are incomplete.");
   }
-  
+
   return {
     score,
     decision,
@@ -180,9 +259,8 @@ export function calculateRiskScore(signals = {}) {
     unknownSignals
   };
 }
-export async function detectNearContract(accountId) {
-  const NEAR_RPC = "https://rpc.mainnet.near.org";
 
+export async function detectNearContract(accountId) {
   if (!accountId || typeof accountId !== "string") {
     return {
       status: "ERROR",
@@ -208,15 +286,19 @@ export async function detectNearContract(accountId) {
       })
     });
 
+    if (!response.ok) {
+      throw new Error("NEAR contract request failed.");
+    }
+
     const data = await response.json();
 
     if (data.error) {
-      const errorText = JSON.stringify(data.error);
+      const errorText = JSON.stringify(data.error).toLowerCase();
 
       if (
-  errorText.toLowerCase().includes("contract code not found") ||
-  errorText.toLowerCase().includes("no contract code")
-) {
+        errorText.includes("contract code not found") ||
+        errorText.includes("no contract code")
+      ) {
         return {
           status: "NO_CONTRACT",
           hasContract: false,
@@ -245,6 +327,7 @@ export async function detectNearContract(accountId) {
     };
   }
 }
+
 export function compareContractHash(accountId, currentHash) {
   if (!accountId || !currentHash) {
     return {
