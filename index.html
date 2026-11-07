@@ -113,8 +113,9 @@ footer{text-align:center;color:#7189a7;font-size:12px;padding:25px}
 
 </div>
 
+
 <script>
-async function inspectAccount(){
+async function inspectAccount() {
   const account = document.getElementById("account").value.trim();
   const result = document.getElementById("result");
   const decision = document.getElementById("decision");
@@ -122,109 +123,112 @@ async function inspectAccount(){
   const details = document.getElementById("details");
 
   result.style.display = "block";
-  decision.textContent = "🔄 INSPECTING...";
+  decision.textContent = "INSPECTING...";
   decision.className = "warn";
   message.textContent = "Contacting the NEAR network...";
   details.textContent = "";
 
   try {
     const {
-  inspectNearAccount,
-  calculateRiskScore,
-  detectNearContract,
-  compareContractHash
-} = await import("./sentinel.js");
+      inspectNearAccount,
+      calculateRiskScore,
+      detectNearContract,
+      compareContractHash
+    } = await import("./sentinel.js");
+
     const data = await inspectNearAccount(account);
 
-
     if (data.status === "FOUND") {
-const contract = await detectNearContract(account);
-let contractHistory = {
-  status: "NOT_APPLICABLE",
-  message: "No contract fingerprint available."
-};
+      const contract = await detectNearContract(account);
 
-if (contract.status === "FOUND") {
-  contractHistory = compareContractHash(
-    account,
-    contract.codeHash
-  );
-}
+      let contractHistory = {
+        status: "NOT_APPLICABLE",
+        message: "No contract fingerprint available."
+      };
+
+      if (contract.status === "FOUND") {
+        contractHistory = compareContractHash(
+          account,
+          contract.codeHash
+        );
+      }
+
       const risk = calculateRiskScore({
-  knownMalicious: undefined,
+        knownMalicious: undefined,
 
-  suspiciousCodeChange:
-    contractHistory.status === "CHANGED"
-      ? true
-      : ["BASELINE_SET", "UNCHANGED"].includes(contractHistory.status)
-        ? false
-        : undefined,
+        suspiciousCodeChange:
+          contractHistory.status === "CHANGED"
+            ? true
+            : ["BASELINE_SET", "UNCHANGED"].includes(contractHistory.status)
+              ? false
+              : undefined,
 
-  unusualActivity: undefined,
-  suspiciousHistory: undefined,
-  riskyAccessKeys:
-  data.accessKeyCheckAvailable
-    ? data.fullAccessKeyCount > 1
-    : undefined,
-  failedInteractions: undefined
-});
+        unusualActivity: undefined,
+        suspiciousHistory: undefined,
 
-decision.textContent = "⚠️ " + risk.decision;
-decision.className = risk.decision.toLowerCase();
+        riskyAccessKeys:
+          data.accessKeyCheckAvailable
+            ? data.fullAccessKeyCount > 1
+            : undefined,
 
-message.textContent =
-  "NEAR account found. Risk score: " + risk.score;
+        failedInteractions: undefined
+      });
 
-details.textContent =
-  "Balance: " + data.balance +
-  " yoctoNEAR | Storage: " + data.storageUsage +
-  " bytes | Block: " + data.blockHeight +
-" | Total access keys: " + data.accessKeyCount +
-" | Full-access keys: " + data.fullAccessKeyCount +
-" | Function-call keys: " + data.functionCallKeyCount +
-" | Access-key check: " +
-(data.accessKeyCheckAvailable ? "Available" : "Unavailable") +
-  " | " + risk.reasons.join(" ") +
-  " | Contract: " +
-  (contract.status === "FOUND"
-    ? "Detected"
-    : contract.status === "NO_CONTRACT"
-      ? "No deployed code"
-      : "Could not verify") +
-  " | Contract history: " +
-  contractHistory.status +
-  " (" + contractHistory.message + ")";
+      decision.textContent = risk.decision;
+      decision.className = risk.decision.toLowerCase();
+
+      message.textContent =
+        "NEAR account found. Risk score: " + risk.score;
+
+      details.textContent =
+        "Balance: " + data.balance +
+        " yoctoNEAR | Storage: " + data.storageUsage +
+        " bytes | Block: " + data.blockHeight +
+        " | Total access keys: " + data.accessKeyCount +
+        " | Full-access keys: " + data.fullAccessKeyCount +
+        " | Function-call keys: " + data.functionCallKeyCount +
+        " | Access-key check: " +
+        (data.accessKeyCheckAvailable ? "Available" : "Unavailable") +
+        " | Independent access-key count: " +
+        (data.independentAccessKeyCount ?? "Unavailable") +
+        " | Independent check: " +
+        (data.independentAccessKeyCheckAvailable ? "Available" : "Unavailable") +
+        " | Verification: " +
+        (data.accessKeyVerification || "UNAVAILABLE") +
+        " | " + risk.reasons.join(" ") +
+        " | Contract: " +
+        (contract.status === "FOUND"
+          ? "Detected"
+          : contract.status === "NO_CONTRACT"
+            ? "No deployed code"
+            : "Could not verify") +
+        " | Contract history: " +
+        contractHistory.status +
+        " (" + contractHistory.message + ")";
+
     } else if (data.status === "NOT_FOUND") {
-      decision.textContent = "⚠️ WARN";
+      decision.textContent = "WARN";
       decision.className = "warn";
       message.textContent = "Account not found on NEAR.";
-      details.textContent = "Do not assume an account is malicious just because it was not found.";
+      details.textContent =
+        "Do not assume an account is malicious just because it was not found.";
+
     } else {
-      decision.textContent = "⚠️ CHECK FAILED";
+      decision.textContent = "CHECK FAILED";
       decision.className = "warn";
       message.textContent = data.message;
       details.textContent = "Try again later.";
     }
+
   } catch (error) {
-    decision.textContent = "⚠️ ERROR";
+    console.error("Sentinel inspection error:", error);
+    decision.textContent = "ERROR";
     decision.className = "warn";
     message.textContent = "Could not load Sentinel's inspection engine.";
     details.textContent = error.message;
   }
-        }
-    } else {
-      decision.textContent = "⚠️ CHECK FAILED";
-      decision.className = "warn";
-      message.textContent = data.message;
-      details.textContent = "Try again later.";
-    }
-  } catch (error) {
-    decision.textContent = "⚠️ ERROR";
-    decision.className = "warn";
-    message.textContent = "Could not load Sentinel's inspection engine.";
-    details.textContent = error.message;
-  }
-        }
+}
 </script>
+
 </body>
 </html>
