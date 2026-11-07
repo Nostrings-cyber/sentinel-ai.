@@ -212,6 +212,19 @@ details.textContent =
     details.textContent = error.message;
   }
         }
+    } else {
+      decision.textContent = "⚠️ CHECK FAILED";
+      decision.className = "warn";
+      message.textContent = data.message;
+      details.textContent = "Try again later.";
+    }
+  } catch (error) {
+    decision.textContent = "⚠️ ERROR";
+    decision.className = "warn";
+    message.textContent = "Could not load Sentinel's inspection engine.";
+    details.textContent = error.message;
+  }
+        }
 </script>
 </body>
 </html>
