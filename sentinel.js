@@ -305,11 +305,12 @@ export async function detectNearContract(accountId) {
         };
       }
 
-      return {
-        status: "ERROR",
-        message: "NEAR RPC could not verify contract code."
-      };
-    }
+      catch (error) {
+  return {
+    status: "ERROR",
+    message: error.message || String(error)
+  };
+}
 
     return {
       status: "FOUND",
