@@ -1,5 +1,4 @@
-
-const NEAR_RPC = "https://rpc.mainnet.near.org";
+const NEAR_RPC = "https://rpc.mainnet.fastnear.com";
 const FASTNEAR_RPC = "https://rpc.mainnet.fastnear.com";
 
 export async function inspectNearAccount(accountId) {
