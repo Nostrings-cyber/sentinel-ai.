@@ -193,6 +193,7 @@ export async function inspectNearAccount(accountId) {
   }
 }
 
+
 export function calculateRiskScore(signals = {}) {
   let score = 0;
   const reasons = [];
@@ -242,12 +243,17 @@ export function calculateRiskScore(signals = {}) {
 
   score = Math.min(score, 100);
 
-  let decision = "ALLOW";
+  let decision;
 
-  if (score >= 70) {
+  if (signals.knownMalicious === true || score >= 70) {
     decision = "BLOCK";
   } else if (score >= 30 || unknownSignals.length > 0) {
     decision = "WARN";
+  } else {
+    decision = "ALLOW";
+  }
+
+  if (unknownSignals.length > 0) {
     reasons.push("Some security checks are incomplete.");
   }
 
@@ -258,6 +264,7 @@ export function calculateRiskScore(signals = {}) {
     unknownSignals
   };
 }
+
 
 
 export async function detectNearContract(accountId) {
