@@ -259,6 +259,7 @@ export function calculateRiskScore(signals = {}) {
   };
 }
 
+
 export async function detectNearContract(accountId) {
   if (!accountId || typeof accountId !== "string") {
     return {
@@ -305,12 +306,15 @@ export async function detectNearContract(accountId) {
         };
       }
 
-      catch (error) {
-  return {
-    status: "ERROR",
-    message: error.message || String(error)
-  };
-}
+      return {
+        status: "ERROR",
+        message: data.error.message || "NEAR returned an error."
+      };
+    }
+
+    if (!data.result) {
+      throw new Error("Contract information is unavailable.");
+    }
 
     return {
       status: "FOUND",
@@ -323,7 +327,7 @@ export async function detectNearContract(accountId) {
   } catch (error) {
     return {
       status: "ERROR",
-      message: "Could not connect to NEAR RPC."
+      message: error.message || String(error)
     };
   }
 }
