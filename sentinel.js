@@ -397,3 +397,14 @@ const blockTest = calculateRiskScore({
 });
 
 console.log("SENTINEL BLOCK TEST:", blockTest);
+
+const warnTest = calculateRiskScore({
+  knownMalicious: false,
+  suspiciousCodeChange: true,
+  unusualActivity: false,
+  suspiciousHistory: false,
+  riskyAccessKeys: false,
+  failedInteractions: false
+});
+
+console.log("SENTINEL WARN TEST:", warnTest);
