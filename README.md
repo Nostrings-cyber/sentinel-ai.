@@ -59,6 +59,32 @@ The guard accepts a risk assessment and a signing callback.
 
 The current guard demonstration uses a simulated signing callback. It is not yet a production wallet integration.
 
+Malicious Agent Attack Simulation
+
+Sentinel AI includes a simulated attack scenario demonstrating how its authorization guard prevents an unsafe transaction from being signed.
+
+Attack scenario:
+
+An untrusted instruction attempts to manipulate an autonomous agent into sending 5 NEAR to an attacker-controlled recipient.
+
+Sentinel's response:
+
+1. The simulated agent presents the attempted transaction.
+2. Sentinel evaluates the supplied security signals.
+3. The receiver is identified through the malicious blocklist signal.
+4. Sentinel returns "BLOCK" with a risk score of 100.
+5. The signing callback is never executed.
+
+Verified console output:
+
+SENTINEL DECISION: BLOCK
+RISK SCORE: 100
+TRANSACTION SIGNED: false
+SIGNER CALLED: false
+PASS: SENTINEL STOPPED THE ATTACK.
+
+The attack simulation uses a simulated agent and signing callback. It does not execute a real transfer or connect to a live AI agent.
+
 Running the Authorization Tests
 
 The project includes four browser-based authorization tests.
