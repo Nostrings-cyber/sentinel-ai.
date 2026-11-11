@@ -130,6 +130,61 @@ button:disabled {
   border-bottom: 1px solid #383838;
 }
 
+.inspection-details {
+  margin-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.detail-section {
+  padding: 14px;
+  background: #1c1c1c;
+  border: 1px solid #383838;
+  border-radius: 10px;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px;
+  color: #eeeeee;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #333333;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #999999;
+  font-size: 12px;
+}
+
+.detail-value {
+  color: #eeeeee;
+  font-size: 12px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.detail-warning {
+  padding: 12px;
+  border: 1px solid #80652e;
+  background: #292317;
+  border-radius: 8px;
+  color: #E4BC65;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 footer {
   text-align: center;
   color: #777777;
@@ -172,8 +227,7 @@ footer {
   <div class="result" id="result" aria-live="polite">
     <h2 id="decision"></h2>
     <p id="message"></p>
-    <p class="small" id="details"></p>
-  </div>
+  <div class="inspection-details" id="details"></div>
 </div>
 
 <!-- SECURITY DECISIONS -->
@@ -222,6 +276,88 @@ footer {
 </div>
 
 <script>
+
+function renderInspectionDetails(data, contract, contractHistory, risk) {
+  const container = document.getElementById("details");
+  container.replaceChildren();
+
+  function addSection(title, rows) {
+    const section = document.createElement("div");
+    section.className = "detail-section";
+
+    const heading = document.createElement("h4");
+    heading.textContent = title;
+    section.appendChild(heading);
+
+    rows.forEach(([label, value]) => {
+      const row = document.createElement("div");
+      row.className = "detail-row";
+
+      const name = document.createElement("span");
+      name.className = "detail-label";
+      name.textContent = label;
+
+      const result = document.createElement("span");
+      result.className = "detail-value";
+      result.textContent = String(value ?? "Unavailable");
+
+      row.append(name, result);
+      section.appendChild(row);
+    });
+
+    container.appendChild(section);
+  }
+
+  addSection("NETWORK INFORMATION", [
+    ["Balance", data.balance + " yoctoNEAR"],
+    ["Storage", data.storageUsage + " bytes"],
+    ["Block height", data.blockHeight]
+  ]);
+
+  addSection("ACCESS KEY SECURITY", [
+    ["Total access keys", data.accessKeyCount],
+    ["Full-access keys", data.fullAccessKeyCount],
+    ["Function-call keys", data.functionCallKeyCount],
+    [
+      "Access-key check",
+      data.accessKeyCheckAvailable ? "Available" : "Unavailable"
+    ],
+    [
+      "Additional key count",
+      data.independentAccessKeyCount ?? "Unavailable"
+    ],
+    [
+      "Additional check",
+      data.independentAccessKeyCheckAvailable
+        ? "Available"
+        : "Unavailable"
+    ],
+    ["Reported verification", data.accessKeyVerification || "UNAVAILABLE"]
+  ]);
+
+  addSection("CONTRACT SECURITY", [
+    [
+      "Contract detection",
+      contract.status === "FOUND"
+        ? "Detected"
+        : contract.status === "NO_CONTRACT"
+          ? "No deployed code"
+          : "Could not verify"
+    ],
+    ["Contract history", contractHistory.status],
+    ["Fingerprint result", contractHistory.message]
+  ]);
+
+  if (risk.unknownSignals && risk.unknownSignals.length > 0) {
+    const warning = document.createElement("div");
+    warning.className = "detail-warning";
+    warning.textContent =
+      "Some security checks are incomplete: " +
+      risk.unknownSignals.join(", ");
+    container.appendChild(warning);
+  }
+}
+
 async function inspectAccount() {
   const account = document.getElementById("account").value.trim();
   const result = document.getElementById("result");
@@ -299,32 +435,12 @@ async function inspectAccount() {
       message.textContent =
         "NEAR account found. Risk score: " + risk.score;
 
-      details.textContent =
-        "Balance: " + data.balance +
-        " yoctoNEAR | Storage: " + data.storageUsage +
-        " bytes | Block: " + data.blockHeight +
-        " | Total access keys: " + data.accessKeyCount +
-        " | Full-access keys: " + data.fullAccessKeyCount +
-        " | Function-call keys: " + data.functionCallKeyCount +
-        " | Access-key check: " +
-        (data.accessKeyCheckAvailable ? "Available" : "Unavailable") +
-        " | Independent access-key count: " +
-        (data.independentAccessKeyCount ?? "Unavailable") +
-        " | Independent check: " +
-        (data.independentAccessKeyCheckAvailable ? "Available" : "Unavailable") +
-        " | Verification: " +
-        (data.accessKeyVerification || "UNAVAILABLE") +
-        " | " + risk.reasons.join(" ") +
-        " | Contract: " +
-        (contract.status === "FOUND"
-          ? "Detected"
-          : contract.status === "NO_CONTRACT"
-            ? "No deployed code"
-            : "Could not verify") +
-        " | Contract history: " +
-        contractHistory.status +
-        " (" + contractHistory.message + ")";
-
+      renderInspectionDetails(
+  data,
+  contract,
+  contractHistory,
+  risk
+);
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "WARN";
       decision.className = "warn";
