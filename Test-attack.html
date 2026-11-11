@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel AI | Attack Test</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      max-width: 650px;
+      margin: 40px auto;
+    }
+    .panel {
+      background: #1c1c1c;
+      border: 1px solid #383838;
+      border-radius: 14px;
+      padding: 20px;
+    }
+    button {
+      background: #eee;
+      color: #111;
+      border: 0;
+      padding: 13px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #101010;
+      padding: 15px;
+      border-radius: 8px;
+      line-height: 1.6;
+    }
+    .pass { color: #7ee0a0; }
+    .fail { color: #ff7777; }
+  </style>
+</head>
+<body>
+  <h1>Sentinel AI</h1>
+  <p>Attack simulation test</p>
+
+  <div class="panel">
+    <p>Attempt: malicious agent tries to send 5 NEAR.</p>
+    <button id="runButton">Run attack simulation</button>
+    <h3 id="status">Waiting for test...</h3>
+    <pre id="output">No simulation has been run.</pre>
+  </div>
+
+  <script type="module">
+    const button = document.getElementById("runButton");
+    const output = document.getElementById("output");
+    const status = document.getElementById("status");
+
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      button.textContent = "Running...";
+
+      try {
+        const { runAttackDemo } = await import("./attackDemo.js");
+        const result = await runAttackDemo();
+
+        output.textContent = JSON.stringify(result, null, 2);
+
+        status.textContent = result.passed
+          ? "PASS: ATTACK BLOCKED"
+          : "FAIL: CHECK RESULTS";
+
+        status.className = result.passed ? "pass" : "fail";
+      } catch (error) {
+        status.textContent = "TEST ERROR";
+        status.className = "fail";
+        output.textContent = error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = "Run attack simulation";
+      }
+    });
+  </script>
+</body>
+</html>
