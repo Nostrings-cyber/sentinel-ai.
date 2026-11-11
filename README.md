@@ -20,7 +20,7 @@ The transaction guard enforces these decisions before invoking the signing funct
 
 Security Architecture
 
-1. Account inspection: Retrieves NEAR account and access-key information.
+1. Account inspection: Retrieves NEAR account and access-key information.k
 2. Risk assessment: Evaluates available security signals.
 3. Authorization guard: Applies ALLOW, WARN, and BLOCK decisions.
 4. Restricted signing: Demonstrates NEAR FunctionCall access keys limited to specific contracts and methods.
@@ -58,6 +58,29 @@ The guard accepts a risk assessment and a signing callback.
 - ALLOW permits the signing callback to execute.
 
 The current guard demonstration uses a simulated signing callback. It is not yet a production wallet integration.
+
+Running the Authorization Tests
+
+The project includes four browser-based authorization tests.
+
+Open the hosted demo and its Eruda console, then run:
+
+import("https://nostrings-cyber.github.io/sentinel-ai./agentGuard.test.js")
+  .then(() => console.log("TEST MODULE LOADED"))
+  .catch(error => console.error("TEST ERROR:", error));
+
+Expected results:
+
+- PASS: BLOCK prevents signing.
+- PASS: WARN requires human approval.
+- PASS: WARN proceeds after human approval.
+- PASS: ALLOW proceeds without approval.
+
+Successful execution prints:
+
+"SENTINEL AI: ALL 4 TESTS PASSED"
+
+These tests use a simulated signing callback. They do not broadcast real transactions.
 
 Project Components
 
