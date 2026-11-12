@@ -451,8 +451,10 @@ suspiciousHistory: undefined,
         failedInteractions:
   activity.status === "AVAILABLE" &&
   Number.isFinite(activity.failedTransactions)
-    ? activity.failedTransactions > 0
+        ? activity.failedTransactions > 0
     : undefined
+      });
+
       decision.textContent = risk.decision;
       decision.className = risk.decision.toLowerCase();
 
