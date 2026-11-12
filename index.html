@@ -401,11 +401,12 @@ async function inspectAccount() {
 
   try {
     const {
-      inspectNearAccount,
-      assessRecipientRisk,
-      detectNearContract,
-      compareContractHash
-    } = await import("./sentinel.js");
+  inspectNearAccount,
+  analyzeTransactionHistory,
+  assessRecipientRisk,
+  detectNearContract,
+  compareContractHash
+} = await import("./sentinel.js");
 
     const data = await inspectNearAccount(account);
 
