@@ -424,6 +424,7 @@ async function inspectAccount() {
           contract.codeHash
         );
       }
+const activity = await analyzeTransactionHistory(account);
 const risk = await assessRecipientRisk(account, {
         knownMalicious: undefined,
 
