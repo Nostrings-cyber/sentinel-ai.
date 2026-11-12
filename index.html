@@ -441,7 +441,12 @@ unusualActivity:
     ? activity.transactionsWithin60Seconds >= 5
     : undefined,
 
-suspiciousHistory: undefined,
+suspiciousHistory:
+  activity.status === "AVAILABLE" &&
+  activity.sampledTransactions > 0 &&
+  Array.isArray(activity.repeatedReceivers)
+    ? activity.repeatedReceivers.length > 0
+    : undefined,
 
         riskyAccessKeys:
           data.accessKeyCheckAvailable
