@@ -435,17 +435,24 @@ const risk = await assessRecipientRisk(account, {
               ? false
               : undefined,
 
-        unusualActivity: undefined,
-        suspiciousHistory: undefined,
+unusualActivity:
+  activity.status === "AVAILABLE" &&
+  Number.isFinite(activity.transactionsWithin60Seconds)
+    ? activity.transactionsWithin60Seconds >= 5
+    : undefined,
+
+suspiciousHistory: undefined,
 
         riskyAccessKeys:
           data.accessKeyCheckAvailable
             ? data.fullAccessKeyCount > 1
             : undefined,
 
-        failedInteractions: undefined
-      });
-
+        failedInteractions:
+  activity.status === "AVAILABLE" &&
+  Number.isFinite(activity.failedTransactions)
+    ? activity.failedTransactions > 0
+    : undefined
       decision.textContent = risk.decision;
       decision.className = risk.decision.toLowerCase();
 
