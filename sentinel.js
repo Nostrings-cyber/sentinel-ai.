@@ -257,6 +257,22 @@ export async function checkMaliciousRecipient(accountId) {
   }
 }
 
+export async function assessRecipientRisk(accountId, signals = {}) {
+  const blocklist = await checkMaliciousRecipient(accountId);
+
+  const risk = calculateRiskScore({
+    ...signals,
+    knownMalicious:
+      blocklist.status === "BLOCKLISTED"
+        ? true
+        : blocklist.status === "CLEAR"
+          ? false
+          : undefined
+  });
+
+  return { ...risk, blocklist };
+}
+
 export function calculateRiskScore(signals = {}) {
   let score = 0;
   const reasons = [];
