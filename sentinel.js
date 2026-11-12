@@ -193,6 +193,69 @@ export async function inspectNearAccount(accountId) {
   }
 }
 
+export async function checkMaliciousRecipient(accountId) {
+  const id = String(accountId || "").trim().toLowerCase();
+
+  if (!/^[a-z0-9._-]{2,64}$/.test(id)) {
+    return {
+      status: "UNKNOWN",
+      knownMalicious: undefined,
+      message: "Invalid recipient account ID."
+    };
+  }
+
+  try {
+    const response = await fetch("./Blocklist.json", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Shared blocklist request failed.");
+    }
+
+    const blocklist = await response.json();
+
+    if (
+      blocklist.version !== 1 ||
+      !Array.isArray(blocklist.entries)
+    ) {
+      throw new Error("Shared blocklist format is invalid.");
+    }
+
+    const entry = blocklist.entries.find(item =>
+      item &&
+      typeof item.accountId === "string" &&
+      item.accountId.trim().toLowerCase() === id &&
+      item.status === "CONFIRMED"
+    );
+
+    if (!entry) {
+      return {
+        status: "CLEAR",
+        knownMalicious: false,
+        message: "Recipient is not listed in the shared blocklist."
+      };
+    }
+
+    return {
+      status: "BLOCKLISTED",
+      knownMalicious: true,
+      reason: entry.reason || "Confirmed malicious recipient.",
+      evidence: entry.evidence || null,
+      reportedAt: entry.reportedAt || null,
+      message: "Recipient is listed in the shared malicious blocklist."
+    };
+
+  } catch (error) {
+    console.error("Sentinel blocklist check failed:", error);
+
+    return {
+      status: "UNKNOWN",
+      knownMalicious: undefined,
+      message: "Shared blocklist could not be verified."
+    };
+  }
+}
 
 export function calculateRiskScore(signals = {}) {
   let score = 0;
