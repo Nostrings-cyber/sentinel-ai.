@@ -393,7 +393,7 @@ async function inspectAccount() {
   try {
     const {
       inspectNearAccount,
-      calculateRiskScore,
+      assessRecipientRisk,,
       detectNearContract,
       compareContractHash
     } = await import("./sentinel.js");
@@ -414,8 +414,7 @@ async function inspectAccount() {
           contract.codeHash
         );
       }
-
-      const risk = calculateRiskScore({
+const risk = await assessRecipientRisk(account, {
         knownMalicious: undefined,
 
         suspiciousCodeChange:
