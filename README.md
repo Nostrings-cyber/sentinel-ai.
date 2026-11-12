@@ -2,80 +2,111 @@ Sentinel AI
 
 A security guard for autonomous agents on NEAR Protocol.
 
-Sentinel AI helps prevent unsafe blockchain actions by evaluating transaction risk before an agent signs or executes an operation.
+Sentinel AI is a risk-based authorization layer designed to help prevent autonomous agents from performing unsafe blockchain actions. It evaluates security signals before a transaction reaches the signing function and returns one of three decisions: "ALLOW", "WARN", or "BLOCK".
+
+Live Demo: https://nostrings-cyber.github.io/sentinel-ai./
+
+Hackathon: NEAR Hackathon 2026
+Track: AI Security & Defense
+
+---
 
 The Problem
 
-Autonomous agents can be manipulated into sending funds to malicious recipients or interacting with unsafe contracts. Once a transaction is signed and broadcast, reversing it may be impossible.
+Autonomous agents can be manipulated through malicious instructions, unsafe recipients, and interactions with suspicious smart contracts.
+
+An agent that signs and broadcasts an unsafe transaction may cause irreversible financial losses.
+
+Existing agent workflows need a security layer that evaluates proposed actions before signing.
 
 The Solution
 
-Sentinel AI introduces a risk-based authorization layer that evaluates actions and produces one of three decisions:
+Sentinel AI introduces a transaction authorization guard between an autonomous agent and its signing function.
 
-- ALLOW: The action may proceed.
-- WARN: Human approval is required.
-- BLOCK: The action must not be signed.
+Every assessed action receives one of three decisions:
 
-The transaction guard enforces these decisions before invoking the signing function.
+Decision| Behaviour
+"ALLOW"| Permits the signing function to execute.
+"WARN"| Requires explicit human approval.
+"BLOCK"| Prevents the signing function from executing.
+
+The authorization guard enforces the decision before invoking the signing callback.
 
 Security Architecture
 
-1. Account inspection: Retrieves NEAR account and access-key information.k
-2. Risk assessment: Evaluates available security signals.
-3. Authorization guard: Applies ALLOW, WARN, and BLOCK decisions.
-4. Restricted signing: Demonstrates NEAR FunctionCall access keys limited to specific contracts and methods.
-5. Transaction analysis API: Provides heuristic transaction activity analysis through a separate Cloudflare Worker.
+Sentinel AI consists of five main components:
+
+1. Account Inspection: Retrieves NEAR account information, access-key details, and contract information.
+2. Risk Assessment: Evaluates available security signals and calculates a risk score.
+3. Authorization Guard: Enforces ALLOW, WARN, and BLOCK decisions.
+4. Restricted Signing: Demonstrates NEAR FunctionCall access keys restricted to specific contracts and methods.
+5. Transaction Analysis API: Provides heuristic transaction activity analysis through a separate Cloudflare Worker.
+
+Authorization Flow
+
+Agent action → Risk assessment → Security decision → Authorization guard → Signing callback (if permitted).
 
 NEAR Testnet Demonstration
 
-Sentinel AI has been tested on:
+Sentinel AI has been tested using the following NEAR testnet account:
 
 "sentinel-lab-2026.testnet"
 
-A FunctionCall access key was created with these restrictions:
+A restricted FunctionCall access key was created with these permissions:
 
 Setting| Value
 Network| NEAR Testnet
-Contract| sentinel-lab-2026.testnet
+Contract| "sentinel-lab-2026.testnet"
 Permitted method| "set_message"
 Allowance| 1 NEAR
 Key type| FunctionCall
 
-Verified results
+Verified On-chain Results
 
 - The restricted key successfully called "set_message".
-- A subsequent read returned "Signed by Sentinel restricted key".
-- An attempt to call "new" with the restricted key was rejected because that method was not permitted.
+- A subsequent read returned: "Signed by Sentinel restricted key".
+- An attempt to call "new" using the restricted key was rejected because the method was not permitted.
 
-These results demonstrate enforcement of method-level permissions by the NEAR protocol.
+Transaction evidence:
+"View successful testnet transaction on NEAR Explorer" (https://explorer.testnet.near.org/transactions/9KHQywizXaEfw21c6dqifhjsP6EiScAdAFkBMtA7UYNA)
+
+These results demonstrate method-level permission enforcement by the NEAR protocol.
 
 Agent Authorization Guard
 
-The guard accepts a risk assessment and a signing callback.
+The authorization guard is implemented in "agentGuard.js".
 
-- BLOCK prevents the signing callback from executing.
-- WARN requires explicit human approval.
-- ALLOW permits the signing callback to execute.
+It accepts:
 
-The current guard demonstration uses a simulated signing callback. It is not yet a production wallet integration.
+- A security signal assessment.
+- A transaction signing callback.
+- A human approval callback when required.
+
+Its behaviour:
+
+- "BLOCK": Never invokes the signing callback.
+- "WARN": Requires explicit human approval before signing.
+- "ALLOW": Invokes the signing callback without requiring approval.
+
+The current implementation demonstrates authorization using a simulated signing callback. It is not yet a production wallet integration.
 
 Malicious Agent Attack Simulation
 
-Sentinel AI includes a simulated attack scenario demonstrating how its authorization guard prevents an unsafe transaction from being signed.
+Sentinel AI includes a simulated attack scenario demonstrating how the authorization guard can stop an unsafe transaction.
 
-Attack scenario:
+Attack Scenario
 
 An untrusted instruction attempts to manipulate an autonomous agent into sending 5 NEAR to an attacker-controlled recipient.
 
-Sentinel's response:
+Sentinel's Response
 
 1. The simulated agent presents the attempted transaction.
 2. Sentinel evaluates the supplied security signals.
-3. The receiver is identified through the malicious blocklist signal.
+3. The malicious blocklist signal identifies the receiver as unsafe.
 4. Sentinel returns "BLOCK" with a risk score of 100.
 5. The signing callback is never executed.
 
-Verified console output:
+Verified Simulation Output
 
 SENTINEL DECISION: BLOCK
 RISK SCORE: 100
@@ -83,67 +114,66 @@ TRANSACTION SIGNED: false
 SIGNER CALLED: false
 PASS: SENTINEL STOPPED THE ATTACK.
 
-The attack simulation uses a simulated agent and signing callback. It does not execute a real transfer or connect to a live AI agent.
+The simulation uses a simulated agent and signing callback. It does not execute a real transfer or connect to a live autonomous AI agent.
 
 Running the Authorization Tests
 
-The project includes four browser-based authorization tests.
+The project includes four browser-based authorization tests in "agentGuard.test.js".
 
-Open the hosted demo and its Eruda console, then run:
+Instructions
+
+1. Open the "hosted Sentinel AI demo" (https://nostrings-cyber.github.io/sentinel-ai./).
+2. Open the Eruda browser console.
+3. Execute the following command:
 
 import("https://nostrings-cyber.github.io/sentinel-ai./agentGuard.test.js")
   .then(() => console.log("TEST MODULE LOADED"))
   .catch(error => console.error("TEST ERROR:", error));
 
-Expected results:
+The test module automatically executes all four tests when imported.
 
-- PASS: BLOCK prevents signing.
-- PASS: WARN requires human approval.
-- PASS: WARN proceeds after human approval.
-- PASS: ALLOW proceeds without approval.
+Expected Results
 
-Successful execution prints:
+PASS: BLOCK prevents signing
+PASS: WARN requires human approval
+PASS: WARN proceeds after human approval
+PASS: ALLOW proceeds without approval
 
-"SENTINEL AI: ALL 4 TESTS PASSED"
+SENTINEL AI: ALL 4 TESTS PASSED
 
-These tests use a simulated signing callback. They do not broadcast real transactions.
+These tests use simulated signing callbacks. They do not broadcast real blockchain transactions.
 
 Project Components
 
-- "index.html": Browser-based NEAR account inspection interface.
-- "sentinel.js": Account inspection and risk assessment logic.
-- "agentGuard.js": Transaction authorization wrapper.
-- "agentGuard.test.js": Authorization guard tests.
-- Cloudflare Worker: Separate transaction-analysis API.
-
-Demo
-
-Hosted interface:
-
-https://nostrings-cyber.github.io/sentinel-ai./
-
-Testnet contract:
-
-"sentinel-lab-2026.testnet"
+File / Component| Purpose
+"index.html"| Browser-based NEAR account inspection interface.
+"sentinel.js"| Account inspection and risk assessment logic.
+"agentGuard.js"| Transaction authorization wrapper.
+"agentGuard.test.js"| Automated authorization tests.
+"attackDemo.js"| Simulated malicious transaction demonstration.
+"Test-attack.html"| Separate attack demonstration interface.
+Cloudflare Worker| Separate heuristic transaction-analysis API.
 
 Current Limitations
 
 Sentinel AI is a hackathon prototype, not a production security product.
 
-- Risk analysis uses heuristics and can produce incomplete assessments.
+- Risk analysis uses heuristics and may produce incomplete assessments.
 - The browser interface does not yet provide a complete autonomous-agent wallet integration.
 - The signing guard demonstration uses a simulated signer.
 - Browser-stored contract fingerprints are not tamper-proof.
 - The transaction-analysis API is separate from the browser interface.
 - The project has not undergone an independent security audit.
 
-Do not use Sentinel AI as the sole security control for real funds.
+Sentinel AI should not be used as the sole security control for real funds.
 
-Track
+Demo and Resources
 
-NEAR Hackathon 2026
-AI Security & Defense
+- Hosted Demo: https://nostrings-cyber.github.io/sentinel-ai./
+- GitHub Repository: https://github.com/Nostrings-cyber/sentinel-ai.
+- NEAR Testnet Account: "sentinel-lab-2026.testnet"
+- On-chain Transaction: "View on NEAR Explorer" (https://explorer.testnet.near.org/transactions/9KHQywizXaEfw21c6dqifhjsP6EiScAdAFkBMtA7UYNA)
 
 License
 
-See the repository's "LICENSE" file for licensing terms.
+This project is licensed under the MIT License. See the "LICENSE" file for details.
