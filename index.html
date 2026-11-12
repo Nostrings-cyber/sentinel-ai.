@@ -355,6 +355,15 @@ function renderInspectionDetails(data, contract, contractHistory, risk) {
     ["Fingerprint result", contractHistory.message]
   ]);
 
+  addSection("RISK ASSESSMENT", [
+    ["Decision", risk.decision],
+    ["Risk score", risk.score],
+    ["Reasons", risk.reasons.join(" | ") || "No risk reasons recorded"],
+    ["Unknown signals", risk.unknownSignals.join(", ") || "None"],
+    ["Blocklist status", risk.blocklist?.status || "Unavailable"],
+    ["Blocklist result", risk.blocklist?.message || "Unavailable"]
+  ]);
+
   if (risk.unknownSignals && risk.unknownSignals.length > 0) {
     const warning = document.createElement("div");
     warning.className = "detail-warning";
