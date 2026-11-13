@@ -490,6 +490,23 @@ addSection("TRANSACTION HISTORY", [
   ["Transactions within 60 seconds", activity.transactionsWithin60Seconds ?? "Unavailable"]
 ]);
 
+if (activity.counterpartyHistory) {
+  const history = activity.counterpartyHistory;
+
+  addSection("COUNTERPARTY INTERACTION HISTORY", [
+    ["Counterparty", history.counterparty || "Unavailable"],
+    ["Sampled interactions", history.sampledInteractions ?? 0],
+    ["Successful interactions", history.successfulInteractions ?? 0],
+    ["Failed interactions", history.failedInteractions ?? 0],
+    ["Unknown outcomes", history.unknownOutcomes ?? 0],
+    [
+      "Latest observed interaction",
+      history.latestObservedInteraction || "None found in sample"
+    ],
+    ["History scope", history.scope || "Limited sample"]
+  ]);
+}
+
   addSection("CONTRACT SECURITY", [
     [
       "Contract detection",
