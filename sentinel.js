@@ -194,8 +194,13 @@ export async function inspectNearAccount(accountId) {
 }
 
 
-export async function analyzeTransactionHistory(accountId) {
+
+export async function analyzeTransactionHistory(
+  accountId,
+  counterpartyId = ""
+) {
   const id = String(accountId || "").trim().toLowerCase();
+  const counterparty = String(counterpartyId || "").trim().toLowerCase();
 
   if (!/^[a-z0-9._-]{2,64}$/.test(id)) {
     return {
@@ -203,6 +208,57 @@ export async function analyzeTransactionHistory(accountId) {
       message: "Invalid account ID."
     };
   }
+
+  if (
+    counterparty &&
+    (
+      !/^[a-z0-9._-]{2,64}$/.test(counterparty) ||
+      counterparty === id
+    )
+  ) {
+    return {
+      status: "UNKNOWN",
+      message: "Invalid counterparty account ID."
+    };
+  }
+
+  try {
+    const url = new URL(
+      "https://sentinel-api.strings-alex2.workers.dev/analyze"
+    );
+
+    url.searchParams.set("account", id);
+
+    if (counterparty) {
+      url.searchParams.set("counterparty", counterparty);
+    }
+
+    const response = await fetch(url, {
+      method: "GET",
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("API returned HTTP " + response.status);
+    }
+
+    const analysis = await response.json();
+
+    return {
+      status: "AVAILABLE",
+      ...analysis
+    };
+
+  } catch (error) {
+    console.error("Sentinel transaction analysis:", error);
+
+    return {
+      status: "UNKNOWN",
+      message: "Transaction history could not be verified."
+    };
+  }
+}
+
 
   try {
     const url = new URL(
