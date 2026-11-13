@@ -680,6 +680,57 @@ details.appendChild(errorBox);
     button.textContent = "INSPECT ACCOUNT";
   }
 }
+
+
+async function runBlocklistTest() {
+  const button = document.getElementById("blocklistTestButton");
+  const output = document.getElementById("blocklistTestResult");
+
+  button.disabled = true;
+  button.textContent = "RUNNING TEST...";
+
+  output.style.display = "block";
+  output.className = "test-result";
+  output.textContent = "Checking shared blocklist...";
+
+  try {
+    const { testBlocklistIntegration } =
+      await import("./sentinel.js");
+
+    const result = await testBlocklistIntegration(
+      "sentinel-lab-2026.testnet"
+    );
+
+    output.replaceChildren();
+
+    const heading = document.createElement("strong");
+    heading.className = result.passed ? "test-pass" : "test-fail";
+    heading.textContent = result.passed ? "TEST PASSED" : "TEST FAILED";
+
+    const details = document.createElement("div");
+    details.textContent =
+      "Status: " + result.status +
+      "\nDecision: " + (result.decision || "Unavailable") +
+      "\nRisk score: " + (result.riskScore ?? "Unavailable") +
+      "\nMessage: " + result.message;
+
+    const label = document.createElement("div");
+    label.className = "small";
+    label.textContent =
+      "TEST_ONLY fixture. This is not a real malicious-account report.";
+
+    output.append(heading, details, label);
+
+  } catch (error) {
+    output.className = "test-result test-fail";
+    output.textContent = "TEST ERROR: " + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "RUN BLOCKLIST TEST";
+  }
+}
+
+
 </script>
 
 </body>
