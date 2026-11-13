@@ -185,6 +185,17 @@ button:disabled {
   line-height: 1.6;
 }
 
+
+.detail-error {
+  padding: 14px;
+  border: 1px solid #8a3d3d;
+  background: #2b1919;
+  border-radius: 8px;
+  color: #f08b8b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 footer {
   text-align: center;
   color: #777777;
@@ -612,7 +623,14 @@ suspiciousHistory:
     decision.textContent = "ERROR";
     decision.className = "warn";
     message.textContent = "Could not load Sentinel's inspection engine.";
-    details.textContent = error.message;
+    details.replaceChildren();
+
+const errorBox = document.createElement("div");
+errorBox.className = "detail-error";
+errorBox.textContent =
+  "Inspection could not be completed. Check your connection and try again.";
+
+details.appendChild(errorBox);
 
   } finally {
     button.disabled = false;
