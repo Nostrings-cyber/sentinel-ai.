@@ -259,41 +259,6 @@ export async function analyzeTransactionHistory(
   }
 }
 
-
-  try {
-    const url = new URL(
-      "https://sentinel-api.strings-alex2.workers.dev/analyze"
-    );
-
-    url.searchParams.set("account", id);
-
-    const response = await fetch(url, {
-      method: "GET",
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      throw new Error("API returned HTTP " + response.status);
-    }
-
-    const analysis = await response.json();
-
-    return {
-      status: "AVAILABLE",
-      ...analysis
-    };
-
-  } catch (error) {
-    console.error("Sentinel transaction analysis:", error);
-
-    return {
-      status: "UNKNOWN",
-      message: "Transaction history could not be verified."
-    };
-  }
-}
-
-
 export async function checkMaliciousRecipient(accountId) {
   const id = String(accountId || "").trim().toLowerCase();
 
