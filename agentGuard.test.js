@@ -71,7 +71,33 @@ async function runAllTests() {
     }
   });
 
-  // TEST 3: WARN proceeds after approval
+  // TEST 3: WARN without approval callback prevents signing
+  await runTest("WARN without approval callback prevents signing", async () => {
+    let signerCalled = false;
+
+    const result = await guardAndSign({
+      signals: {
+        ...safeSignals,
+        suspiciousCodeChange: true,
+        unusualActivity: true
+      },
+      signTransaction: async () => {
+        signerCalled = true;
+        return "SIMULATED_TRANSACTION";
+      }
+    });
+
+    if (
+      result.decision !== "WARN" ||
+      result.status !== "REQUIRES_APPROVAL" ||
+      result.signed !== false ||
+      signerCalled !== false
+    ) {
+      throw new Error("WARN proceeded without an approval callback.");
+    }
+  });
+
+  // TEST 4: WARN proceeds after approval
   await runTest("WARN proceeds after human approval", async () => {
     const result = await guardAndSign({
       signals: {
@@ -92,7 +118,7 @@ async function runAllTests() {
     }
   });
 
-  // TEST 4: ALLOW proceeds without approval
+  // TEST 5: ALLOW proceeds without approval
   await runTest("ALLOW proceeds without approval", async () => {
     const result = await guardAndSign({
       signals: safeSignals,
@@ -112,3 +138,4 @@ async function runAllTests() {
 }
 
 runAllTests();
+
