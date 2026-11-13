@@ -271,7 +271,7 @@ export async function checkMaliciousRecipient(accountId) {
   }
 
   try {
-    const response = await fetch("./Blocklist.json", {
+    const response = await fetch("./test-fixtures/Blocklist.test.json", {
       cache: "no-store"
     });
 
