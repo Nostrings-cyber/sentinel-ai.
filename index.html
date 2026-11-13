@@ -191,6 +191,66 @@ footer {
   font-size: 12px;
   padding: 25px;
 }
+
+
+/* SKELETON LOADING */
+.skeleton-section {
+  padding: 14px;
+  background: #1c1c1c;
+  border: 1px solid #383838;
+  border-radius: 10px;
+}
+
+.skeleton-heading,
+.skeleton-line {
+  background: linear-gradient(
+    90deg,
+    #292929 25%,
+    #3b3b3b 50%,
+    #292929 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s infinite;
+  border-radius: 5px;
+}
+
+.skeleton-heading {
+  width: 55%;
+  height: 13px;
+  margin-bottom: 18px;
+}
+
+.skeleton-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 15px 0;
+}
+
+.skeleton-line {
+  height: 11px;
+}
+
+.skeleton-line.label {
+  width: 38%;
+}
+
+.skeleton-line.value {
+  width: 30%;
+}
+
+@keyframes skeletonShimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-heading,
+  .skeleton-line {
+    animation: none;
+  }
+}
+
 </style>
 
 <!-- ERUDA MOBILE DEBUG CONSOLE -->
