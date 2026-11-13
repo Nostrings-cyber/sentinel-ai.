@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "updatedAt": "2026-11-13",
+  "entries": [
+    {
+      "accountId": "sentinel-lab-2026.testnet",
+      "status": "TEST_ONLY",
+      "reason": "Controlled test fixture for demonstrating Sentinel AI blocklist detection. This account is not being identified as malicious.",
+      "evidence": "Created by the Sentinel AI project for a local integration test only.",
+      "reportedAt": "2026-11-13"
+    }
+  ]
+}
