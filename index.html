@@ -454,6 +454,46 @@ addSection("TRANSACTION HISTORY", [
   }
 }
 
+
+function renderSkeletonDetails() {
+  const container = document.getElementById("details");
+  container.replaceChildren();
+
+  const sections = [
+    ["NETWORK INFORMATION", 3],
+    ["ACCESS KEY SECURITY", 7],
+    ["TRANSACTION HISTORY", 9],
+    ["CONTRACT SECURITY", 3],
+    ["RISK ASSESSMENT", 6]
+  ];
+
+  sections.forEach(([title, rowCount]) => {
+    const section = document.createElement("div");
+    section.className = "skeleton-section";
+
+    const heading = document.createElement("div");
+    heading.className = "skeleton-heading";
+    section.appendChild(heading);
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = document.createElement("div");
+      row.className = "skeleton-row";
+
+      const label = document.createElement("div");
+      label.className = "skeleton-line label";
+
+      const value = document.createElement("div");
+      value.className = "skeleton-line value";
+
+      row.append(label, value);
+      section.appendChild(row);
+    }
+
+    container.appendChild(section);
+  });
+}
+
+
 async function inspectAccount() {
   const account = document.getElementById("account").value.trim();
   const result = document.getElementById("result");
@@ -477,7 +517,7 @@ async function inspectAccount() {
   decision.textContent = "INSPECTING...";
   decision.className = "warn";
   message.textContent = "Contacting the NEAR network...";
-  details.textContent = "";
+renderSkeletonDetails()
 
   try {
     const {
