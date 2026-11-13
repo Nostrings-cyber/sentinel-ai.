@@ -302,6 +302,71 @@ export async function checkMaliciousRecipient(accountId) {
   }
 }
 
+
+export async function testBlocklistIntegration(accountId) {
+  const id = String(accountId || "").trim().toLowerCase();
+
+  try {
+    const response = await fetch("./Blocklist.json", {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("Blocklist request failed.");
+    }
+
+    const blocklist = await response.json();
+
+    if (
+      blocklist.version !== 1 ||
+      !Array.isArray(blocklist.entries)
+    ) {
+      throw new Error("Invalid blocklist format.");
+    }
+
+    const entry = blocklist.entries.find(item =>
+      item &&
+      typeof item.accountId === "string" &&
+      item.accountId.trim().toLowerCase() === id &&
+      item.status === "TEST_ONLY"
+    );
+
+    if (!entry) {
+      return {
+        passed: false,
+        status: "NO_TEST_FIXTURE",
+        message: "No test-only entry found."
+      };
+    }
+
+    const risk = calculateRiskScore({
+      knownMalicious: true,
+      suspiciousCodeChange: false,
+      unusualActivity: false,
+      suspiciousHistory: false,
+      riskyAccessKeys: false,
+      failedInteractions: false
+    });
+
+    return {
+      passed: risk.decision === "BLOCK" && risk.score === 100,
+      status: "TEST_ONLY",
+      accountId: id,
+      decision: risk.decision,
+      riskScore: risk.score,
+      reason: entry.reason,
+      message: "Test fixture detected. BLOCK scoring verified."
+    };
+
+  } catch (error) {
+    return {
+      passed: false,
+      status: "ERROR",
+      message: error.message || "Blocklist test failed."
+    };
+  }
+}
+
 export async function assessRecipientRisk(accountId, signals = {}) {
   const blocklist = await checkMaliciousRecipient(accountId);
 
