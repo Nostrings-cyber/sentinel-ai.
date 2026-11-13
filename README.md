@@ -4,7 +4,7 @@ Security guard for autonomous agents on NEAR Protocol.
 
 Sentinel AI is a security prototype designed to help protect autonomous agents from unsafe blockchain transactions.
 
-Before an agent signs a transaction, Sentinel checks available security information about the recipient and evaluates potential risks.
+Before a transaction is signed, Sentinel evaluates available security information about the account, recipient, contract, and recent transaction activity.
 
 It returns one of three decisions:
 
@@ -14,7 +14,10 @@ It returns one of three decisions:
 
 Live Demo: https://nostrings-cyber.github.io/sentinel-ai./
 
+GitHub Repository: https://github.com/Nostrings-cyber/sentinel-ai.
+
 Hackathon: NEAR Hackathon 2026
+
 Track: AI Security & Defense
 
 ---
@@ -46,8 +49,8 @@ Sentinel AI has five main components:
 1. Account Inspection: Retrieves NEAR account information, access-key details, and contract information.
 2. Risk Assessment: Evaluates security signals and calculates a risk score.
 3. Transaction Analysis: Examines recent transaction activity through a Cloudflare Worker.
-4. Authorization Guard: Controls whether a transaction can proceed.
-5. Restricted Signing: Demonstrates NEAR FunctionCall keys limited to specific contracts and methods.
+4. Counterparty Analysis: Checks sampled outgoing interactions between two specified accounts.
+5. Authorization Guard: Controls whether a transaction can proceed.
 
 Security flow:
 
@@ -74,7 +77,7 @@ These are heuristic rules. They do not prove that an account is malicious or saf
 
 Transaction History Analysis
 
-Sentinel uses a separate Cloudflare Worker to retrieve transaction information through NearBlocks.
+Sentinel uses a Cloudflare Worker to retrieve transaction information through NearBlocks.
 
 The current analysis:
 
@@ -87,17 +90,48 @@ The current analysis:
 - Reports the oldest transaction observed in the sample.
 - Reports whether additional history is available.
 
-The analysis only covers the sampled transactions. It does not claim to inspect an account's entire history or establish its creation date.
+The analysis only covers sampled transactions. It does not inspect an account's complete lifetime history or independently establish its creation date.
+
+Counterparty Interaction Analysis
+
+Sentinel can optionally inspect interactions between two NEAR accounts.
+
+When a counterparty account is provided, it checks sampled outgoing transactions from the inspected account to that counterparty.
+
+It reports:
+
+- Number of sampled interactions.
+- Successful interactions.
+- Failed interactions.
+- Unknown outcomes.
+- Latest observed interaction.
+- Whether more account transaction history is available.
+
+Important limitations:
+
+This analysis is restricted to the sampled transaction history, currently up to 100 transactions.
+
+It only examines outgoing interactions from the inspected account. It does not establish complete lifetime interaction history or prove that either account belongs to an autonomous AI agent.
+
+A result of zero interactions means no matching outgoing interaction was found in the available sample. It does not prove that the accounts have never interacted.
 
 Shared Malicious Recipient Blocklist
 
 Sentinel includes a shared blocklist stored in Blocklist.json.
 
-Each entry can contain an account ID, confirmation status, reason, supporting evidence, and report date.
+Each entry can contain:
+
+- Account ID.
+- Status.
+- Reason.
+- Supporting evidence.
+- Report date.
 
 Only entries marked CONFIRMED trigger a malicious-recipient block.
 
-The current blocklist is empty. A CLEAR result means no matching confirmed entry was found. It does not guarantee that the recipient is safe.
+The repository currently includes a TEST_ONLY fixture used to demonstrate the blocklist integration test. It is not a confirmed malicious-account report and does not trigger normal malicious-recipient checks.
+
+A CLEAR result means no matching confirmed entry was found. It does not guarantee that the recipient is safe.
 
 NEAR Testnet Demonstration
 
@@ -114,7 +148,7 @@ Verified permissions:
 - Key type: FunctionCall.
 - Receiver contract: sentinel-lab-2026.testnet.
 - Permitted method: set_message.
-- Full-access permission: No.
+- Full-access permission on this restricted key: No.
 
 The account also has a separate FullAccess key. The restricted Sentinel key does not inherit that permission.
 
@@ -163,9 +197,13 @@ Sentinel's response:
 Verified simulation output:
 
 SENTINEL DECISION: BLOCK
+
 RISK SCORE: 100
+
 TRANSACTION SIGNED: false
+
 SIGNER CALLED: false
+
 PASS: SENTINEL STOPPED THE ATTACK.
 
 This is a controlled simulation. It does not execute a real transfer or connect to a live autonomous AI agent.
@@ -184,7 +222,7 @@ The tests verify that:
 To run the tests:
 
 1. Open the Sentinel AI demo.
-2. Open the Eruda browser console.
+2. Open the browser console.
 3. Execute:
 
 import("https://nostrings-cyber.github.io/sentinel-ai./agentGuard.test.js")
@@ -194,13 +232,26 @@ import("https://nostrings-cyber.github.io/sentinel-ai./agentGuard.test.js")
 Expected results:
 
 PASS: BLOCK prevents signing
+
 PASS: WARN requires human approval
+
 PASS: WARN proceeds after human approval
+
 PASS: ALLOW proceeds without approval
 
 SENTINEL AI: ALL 4 TESTS PASSED
 
 These tests use simulated signing callbacks. They do not broadcast real blockchain transactions.
+
+Blocklist Integration Test
+
+The dashboard includes a blocklist integration test.
+
+It checks whether the TEST_ONLY fixture can be detected and whether the risk engine produces a BLOCK decision with a score of 100.
+
+This is a controlled test fixture, not a real malicious-account report.
+
+The normal recipient check only blocks entries marked CONFIRMED.
 
 Project Files
 
@@ -211,7 +262,7 @@ Project Files
 - attackDemo.js: Simulated malicious transaction demonstration.
 - Test-attack.html: Separate attack demonstration interface.
 - Blocklist.json: Shared malicious-recipient list.
-- Cloudflare Worker: Transaction history analysis API.
+- Cloudflare Worker: Transaction history and counterparty analysis API.
 
 Current Limitations
 
@@ -219,8 +270,10 @@ Sentinel AI is a hackathon prototype, not a production security product.
 
 - Risk analysis uses heuristics and may produce false positives or false negatives.
 - Transaction history is limited to 100 sampled transactions.
+- Counterparty analysis only checks sampled outgoing interactions.
 - Account creation dates are not independently established.
-- The shared blocklist currently contains no confirmed entries.
+- The shared blocklist currently has no confirmed malicious-account entries.
+- A CLEAR blocklist result does not guarantee an account is safe.
 - Repeated-recipient checks do not establish a complete agent-specific interaction history.
 - The browser interface does not provide a complete autonomous-agent wallet integration.
 - The authorization guard currently uses a simulated signer.
@@ -233,7 +286,7 @@ Demo and Resources
 
 Live Demo: https://nostrings-cyber.github.io/sentinel-ai./
 
-GitHub Repository: https://github.com/Nostrings-cyber/sentinel-ai.
+GitHub Repository: https://github.com/nostrings-cyber/sentinel-ai.
 
 NEAR Testnet Account: sentinel-lab-2026.testnet
 
