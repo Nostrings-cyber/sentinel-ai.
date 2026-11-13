@@ -134,7 +134,7 @@ async function runAllTests() {
     }
   });
 
-  console.log("SENTINEL AI: ALL 4 TESTS PASSED");
+  console.log("SENTINEL AI: ALL 5 TESTS PASSED");
 }
 
 runAllTests();
