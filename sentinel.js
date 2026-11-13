@@ -328,7 +328,7 @@ export async function testBlocklistIntegration(accountId) {
   const id = String(accountId || "").trim().toLowerCase();
 
   try {
-    const response = await fetch("./Blocklist.json", {
+    const response = await fetch("./test-fixtures/Blocklist.test.json", {
       cache: "no-store"
     });
 
