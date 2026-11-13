@@ -196,6 +196,26 @@ button:disabled {
   line-height: 1.6;
 }
 
+.test-result {
+  display: none;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #383838;
+  border-radius: 8px;
+  background: #111111;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.test-pass {
+  color: #65C98A;
+}
+
+.test-fail {
+  color: #E47777;
+}
+
 footer {
   text-align: center;
   color: #777777;
@@ -307,6 +327,29 @@ footer {
     <p id="message"></p>
   <div class="inspection-details" id="details"></div>
 </div>
+
+
+<!-- BLOCKLIST INTEGRATION TEST -->
+<div class="panel">
+  <h3>BLOCKLIST INTEGRATION TEST</h3>
+
+  <p class="small">
+    Verify that Sentinel can detect a TEST_ONLY fixture
+    and trigger its BLOCK scoring path.
+  </p>
+
+  <div class="small">
+    Test account: sentinel-lab-2026.testnet
+  </div>
+
+  <button id="blocklistTestButton" onclick="runBlocklistTest()">
+    RUN BLOCKLIST TEST
+  </button>
+
+  <div id="blocklistTestResult" class="test-result" aria-live="polite">
+  </div>
+</div>
+
 
 <!-- SECURITY DECISIONS -->
 <div class="panel">
