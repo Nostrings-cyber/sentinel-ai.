@@ -612,7 +612,15 @@ renderSkeletonDetails()
           contract.codeHash
         );
       }
-const activity = await analyzeTransactionHistory(account);
+const counterparty = document
+  .getElementById("counterparty")
+  .value
+  .trim();
+
+const activity = await analyzeTransactionHistory(
+  account,
+  counterparty
+);
 const risk = await assessRecipientRisk(account, {
         knownMalicious: undefined,
 
