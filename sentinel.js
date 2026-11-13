@@ -595,26 +595,3 @@ export function compareContractHash(accountId, currentHash) {
     };
   }
 }
-
-
-const blockTest = calculateRiskScore({
-  knownMalicious: true,
-  suspiciousCodeChange: false,
-  unusualActivity: false,
-  suspiciousHistory: false,
-  riskyAccessKeys: false,
-  failedInteractions: false
-});
-
-console.log("SENTINEL BLOCK TEST:", blockTest);
-
-const warnTest = calculateRiskScore({
-  knownMalicious: false,
-  suspiciousCodeChange: true,
-  unusualActivity: true,
-  suspiciousHistory: false,
-  riskyAccessKeys: false,
-  failedInteractions: false
-});
-
-console.log("SENTINEL WARN TEST:", warnTest);
