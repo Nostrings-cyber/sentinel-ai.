@@ -282,6 +282,28 @@ footer {
   }
 }
 
+#scanHistory {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  scrollbar-width: thin;
+}
+
+.history-entry {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #333;
+  overflow-wrap: anywhere;
+}
+
+.history-entry:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
 </style>
 
 <!-- ERUDA MOBILE DEBUG CONSOLE -->
