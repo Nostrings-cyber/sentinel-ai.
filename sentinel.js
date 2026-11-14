@@ -70,7 +70,8 @@ let independentKeyCheckError = "No error";
           params: {
             request_type: "view_access_key_list",
             finality: "final",
-            account_id: id
+            account_id: id,
+            limit: 100
           }
         })
       });
