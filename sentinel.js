@@ -154,10 +154,10 @@ let independentKeyCheckError = "No error";
       independentKeyInfo.available = true;
 
     } catch (error) {
-  keyCheckError =
+  independentKeyCheckError =
     error instanceof Error ? error.message : String(error);
 
-  console.error("NEAR access-key check:", error);
+  console.error("FastNEAR verification:", error);
 }
 
     // 4. Compare both results
@@ -191,6 +191,8 @@ let independentKeyCheckError = "No error";
         independentKeyInfo.available,
 
       accessKeyVerification: verificationStatus,
+      keyCheckError,
+      independentKeyCheckError,
 
       message: "Account found. Further security checks are required."
     };
