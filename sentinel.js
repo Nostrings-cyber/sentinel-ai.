@@ -48,11 +48,14 @@ export async function inspectNearAccount(accountId) {
 
     // 2. Retrieve access keys from NEAR RPC
     let keyInfo = {
-      total: null,
-      fullAccess: null,
-      functionCall: null,
-      available: false
-    };
+  total: null,
+  fullAccess: null,
+  functionCall: null,
+  available: false
+};
+
+let keyCheckError = "No error";
+let independentKeyCheckError = "No error";
 
     try {
       const keyResponse = await fetch(NEAR_RPC, {
@@ -102,8 +105,11 @@ export async function inspectNearAccount(accountId) {
       keyInfo.available = true;
 
     } catch (error) {
-      console.log("NEAR access-key check:", error);
-    }
+  keyCheckError =
+    error instanceof Error ? error.message : String(error);
+
+  console.error("NEAR access-key check:", error);
+}
 
     // 3. Independently retrieve access keys from FastNEAR
     let independentKeyInfo = {
@@ -148,8 +154,11 @@ export async function inspectNearAccount(accountId) {
       independentKeyInfo.available = true;
 
     } catch (error) {
-      console.log("FastNEAR verification:", error);
-    }
+  keyCheckError =
+    error instanceof Error ? error.message : String(error);
+
+  console.error("NEAR access-key check:", error);
+}
 
     // 4. Compare both results
     let verificationStatus = "UNAVAILABLE";
