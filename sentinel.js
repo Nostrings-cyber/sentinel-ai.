@@ -31,8 +31,22 @@ export async function inspectNearAccount(accountId) {
     });
 
     if (!response.ok) {
-      throw new Error("NEAR account request failed.");
-    }
+  const errorBody = await response.text().catch(() => "");
+
+  throw new Error(
+    "Independent RPC HTTP " +
+    response.status +
+    (errorBody ? ": " + errorBody.slice(0, 300) : "")
+  );
+}
+
+let result;
+
+try {
+  result = await response.json();
+} catch {
+  throw new Error("Independent RPC returned invalid JSON.");
+}
 
     const data = await response.json();
 
@@ -124,10 +138,15 @@ const independentKeyCheckPromise = (async () => {
     };
 
   } catch (error) {
-    independentKeyCheckError =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage =
+  error instanceof Error ? error.message : String(error);
 
-    console.error("Independent RPC verification:", error);
+independentKeyCheckError =
+  errorMessage === "Failed to fetch"
+    ? "Network error: possible CORS, connectivity, or endpoint outage."
+    : errorMessage;
+
+console.error("Independent RPC verification:", error);
 
     return {
       total: null,
