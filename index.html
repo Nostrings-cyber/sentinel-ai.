@@ -853,6 +853,34 @@ saveScanToHistory({
 });
 
 renderInspectionDetails(data, contract, contractHistory, activity, risk);
+if (data.independentVerification) {
+  data.independentVerification.then(verification => {
+    if (
+      document.getElementById("account").value.trim().toLowerCase() !==
+      account.toLowerCase()
+    ) return;
+
+    const rows = Array.from(
+      document.querySelectorAll("#details .detail-row")
+    );
+
+    const updates = {
+      "Additional key count": verification.total ?? "Unavailable",
+      "Additional check": verification.available ? "Available" : "Unavailable",
+      "Independent RPC diagnostic": verification.error || "No error",
+      "Reported verification": verification.status
+    };
+
+    rows.forEach(row => {
+      const label = row.querySelector(".detail-label");
+      const value = row.querySelector(".detail-value");
+
+      if (label && value && updates[label.textContent] !== undefined) {
+        value.textContent = String(updates[label.textContent]);
+      }
+    });
+  });
+}
 
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "WARN";
