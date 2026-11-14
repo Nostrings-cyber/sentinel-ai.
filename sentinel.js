@@ -1,5 +1,5 @@
-const NEAR_RPC = "https://rpc.testnet.fastnear.com";
-const FASTNEAR_RPC = "https://rpc.testnet.near.org";
+const NEAR_RPC = "https://rpc.mainnet.fastnear.com";
+const FASTNEAR_RPC = "https://free.rpc.fastnear.com";
 
 export async function inspectNearAccount(accountId) {
   const id = accountId.trim().toLowerCase();
