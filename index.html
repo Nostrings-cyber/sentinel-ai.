@@ -758,18 +758,19 @@ suspiciousHistory:
       });
 
       decision.textContent = risk.decision;
-      decision.className = risk.decision.toLowerCase();
+decision.className = risk.decision.toLowerCase();
+message.textContent =
+  "NEAR account found. Risk score: " + risk.score;
 
-      message.textContent =
-        "NEAR account found. Risk score: " + risk.score;
+saveScanToHistory({
+  accountId: account,
+  decision: risk.decision,
+  score: risk.score,
+  reasons: risk.reasons
+});
 
-      renderInspectionDetails(
-  data,
-  contract,
-  contractHistory,
-  activity,
-  risk
-);
+renderInspectionDetails(data, contract, contractHistory, activity, risk);
+
     } else if (data.status === "NOT_FOUND") {
       decision.textContent = "WARN";
       decision.className = "warn";
