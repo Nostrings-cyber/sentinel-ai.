@@ -83,9 +83,9 @@ let independentKeyCheckError = "No error";
 
       if (keyData.error) {
   throw new Error(
-    "NEAR RPC error: " +
-    (keyData.error.message || JSON.stringify(keyData.error))
-  );
+  "NEAR RPC error: " +
+  JSON.stringify(keyData.error).slice(0, 500)
+);
 }
 
 if (!Array.isArray(keyData.result?.keys)) {
