@@ -231,23 +231,10 @@ const independentKeyCheckPromise = (async () => {
       console.error("NEAR access-key check:", error);
     }
 
-       // 3. Collect independent RPC result
-let independentKeyInfo = await independentKeyCheckPromise;
+       // 3. Independent verification runs in the background
+let verificationStatus = "PENDING";
 
-    // 4. Compare both results
-    let verificationStatus = "UNAVAILABLE";
-
-    if (
-      keyInfo.available &&
-      independentKeyInfo.available
-    ) {
-      verificationStatus =
-        keyInfo.total === independentKeyInfo.total
-          ? "MATCH"
-          : "MISMATCH";
-    }
-
-    // 5. Return results
+    // 4. Return results
     return {
       status: "FOUND",
       accountId: id,
@@ -260,13 +247,21 @@ let independentKeyInfo = await independentKeyCheckPromise;
       functionCallKeyCount: keyInfo.functionCall,
       accessKeyCheckAvailable: keyInfo.available,
 
-      independentAccessKeyCount: independentKeyInfo.total,
-      independentAccessKeyCheckAvailable:
-        independentKeyInfo.available,
+      independentAccessKeyCount: null,
+independentAccessKeyCheckAvailable: false,
+accessKeyVerification: verificationStatus,
 
-      accessKeyVerification: verificationStatus,
-      keyCheckError,
-      independentKeyCheckError,
+independentVerification: independentKeyCheckPromise.then(result => ({
+  total: result.total,
+  available: result.available,
+  status: keyInfo.available && result.available
+    ? (keyInfo.total === result.total ? "MATCH" : "MISMATCH")
+    : "UNAVAILABLE",
+  error: independentKeyCheckError
+})),
+
+keyCheckError,
+independentKeyCheckError,
 
       message: "Account found. Further security checks are required."
     };
