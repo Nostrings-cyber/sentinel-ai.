@@ -490,6 +490,8 @@ function renderInspectionDetails(data, contract, contractHistory, activity, risk
         ? "Available"
         : "Unavailable"
     ],
+["Primary RPC diagnostic", data.keyCheckError || "No error"],
+["Independent RPC diagnostic", data.independentKeyCheckError || "No error"]
     ["Reported verification", data.accessKeyVerification || "UNAVAILABLE"]
   ]);
 
