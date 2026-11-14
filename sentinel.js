@@ -106,10 +106,22 @@ const independentKeyCheckPromise = (async () => {
       });
 
       if (!response.ok) {
-        throw new Error("Independent RPC request failed.");
-      }
+  const errorBody = await response.text().catch(() => "");
 
-      const result = await response.json();
+  throw new Error(
+    "Independent RPC HTTP " +
+    response.status +
+    (errorBody ? ": " + errorBody.slice(0, 300) : "")
+  );
+}
+
+let result;
+
+try {
+  result = await response.json();
+} catch {
+  throw new Error("Independent RPC returned invalid JSON.");
+}
 
       if (result.error || !Array.isArray(result.result?.keys)) {
         throw new Error(
