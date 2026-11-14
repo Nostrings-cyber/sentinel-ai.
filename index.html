@@ -902,7 +902,7 @@ async function runBlocklistTest() {
 
   try {
     const { testBlocklistIntegration } =
-      await import("./sentinel.js");
+      await import("./sentinel.js?v=20261114-2");
 
     const result = await testBlocklistIntegration(
       "sentinel-lab-2026.testnet"
