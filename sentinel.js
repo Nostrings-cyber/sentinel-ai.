@@ -36,23 +36,6 @@ export async function inspectNearAccount(accountId) {
 
 const data = await response.json();
 
-  throw new Error(
-    "Independent RPC HTTP " +
-    response.status +
-    (errorBody ? ": " + errorBody.slice(0, 300) : "")
-  );
-}
-
-let result;
-
-try {
-  result = await response.json();
-} catch {
-  throw new Error("Independent RPC returned invalid JSON.");
-}
-
-    const data = await response.json();
-
     if (data.error || !data.result) {
   console.error("Sentinel RPC response:", data);
 
