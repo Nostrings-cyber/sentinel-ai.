@@ -1,4 +1,4 @@
-Sentinel AI
+**Sentinel AI**
 
 A security checkpoint for autonomous agents on NEAR Protocol.
 
