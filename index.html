@@ -573,6 +573,95 @@ function renderSkeletonDetails() {
   });
 }
 
+const SCAN_HISTORY_KEY = "sentinel_scan_history_v1";
+const MAX_SCAN_HISTORY = 50;
+
+function getScanHistory() {
+  try {
+    const history = JSON.parse(
+      localStorage.getItem(SCAN_HISTORY_KEY) || "[]"
+    );
+
+    return Array.isArray(history) ? history : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveScanToHistory(scan) {
+  try {
+    const history = getScanHistory();
+
+    history.unshift({
+      accountId: scan.accountId,
+      scannedAt: new Date().toISOString(),
+      decision: scan.decision,
+      score: scan.score,
+      reasons: Array.isArray(scan.reasons) ? scan.reasons : []
+    });
+
+    localStorage.setItem(
+      SCAN_HISTORY_KEY,
+      JSON.stringify(history.slice(0, MAX_SCAN_HISTORY))
+    );
+
+    renderScanHistory();
+  } catch (error) {
+    console.warn("Could not save scan history:", error);
+  }
+}
+
+function renderScanHistory() {
+  const container = document.getElementById("scanHistory");
+  if (!container) return;
+
+  const history = getScanHistory();
+  container.replaceChildren();
+
+  if (history.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "small";
+    empty.textContent = "No scans recorded yet.";
+    container.appendChild(empty);
+    return;
+  }
+
+  history.forEach(scan => {
+    const entry = document.createElement("div");
+    entry.className = "history-entry";
+
+    const account = document.createElement("p");
+    account.textContent = "Account: " + scan.accountId;
+
+    const decision = document.createElement("p");
+    decision.textContent =
+      "Decision: " + scan.decision + " | Risk score: " + scan.score;
+
+    const date = document.createElement("p");
+    date.className = "small";
+    date.textContent = new Date(scan.scannedAt).toLocaleString();
+
+    entry.append(account, decision, date);
+
+    if (scan.reasons.length > 0) {
+      const reasons = document.createElement("p");
+      reasons.className = "small";
+      reasons.textContent = "Reasons: " + scan.reasons.join("; ");
+      entry.appendChild(reasons);
+    }
+
+    container.appendChild(entry);
+  });
+}
+
+function clearScanHistory() {
+  if (!window.confirm("Clear all saved scan history?")) return;
+
+  localStorage.removeItem(SCAN_HISTORY_KEY);
+  renderScanHistory();
+}
+
+renderScanHistory();
 
 async function inspectAccount() {
   const account = document.getElementById("account").value.trim();
