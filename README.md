@@ -1,4 +1,4 @@
-**Sentinel AI**
+Sentinel AI
 
 A security checkpoint for autonomous agents on NEAR Protocol.
 
@@ -59,14 +59,9 @@ The maximum score is 100.
 
 Decision Rules
 
-BLOCK:
-A confirmed malicious recipient or a risk score of 70 or higher.
-
-WARN:
-A risk score of 30 or higher, or one or more required signals are unknown.
-
-ALLOW:
-A risk score below 30 when all required signals are available.
+- BLOCK: A confirmed malicious recipient or a risk score of 70 or higher.
+- WARN: A risk score of 30 or higher, or one or more required signals are unknown.
+- ALLOW: A risk score below 30 when all required signals are available.
 
 These are prototype security heuristics. A decision does not prove that an account is malicious or safe.
 
@@ -91,9 +86,7 @@ The available transaction sample is not the account's complete lifetime history.
 
 Backend Source
 
-The Cloudflare Worker source code is available in:
-
-Backend/worker.js
+The Cloudflare Worker source code is available in "Backend/worker.js".
 
 This file is included for code review. Updating the GitHub copy does not automatically deploy or change the live Cloudflare Worker. Deployment must be handled separately through Cloudflare.
 
@@ -112,7 +105,7 @@ This is not a complete history of every interaction between two accounts. Zero m
 
 Shared Blocklist
 
-The shared blocklist is stored in Blocklist.json.
+The shared blocklist is stored in "Blocklist.json".
 
 Entries can include:
 
@@ -124,9 +117,7 @@ Entries can include:
 
 Only entries marked CONFIRMED trigger the normal malicious-recipient block.
 
-The repository also contains a TEST_ONLY fixture in:
-
-test-fixtures/Blocklist.test.json
+The repository also contains a TEST_ONLY fixture in "test-fixtures/Blocklist.test.json".
 
 This fixture is used for testing and is not a real malicious-account report.
 
@@ -134,7 +125,7 @@ A CLEAR result means no matching confirmed entry was found. It does not guarante
 
 Agent Authorization Guard
 
-The authorization guard is implemented in agentGuard.js.
+The authorization guard is implemented in "agentGuard.js".
 
 Its behaviour is:
 
@@ -148,7 +139,7 @@ The guard uses supplied signing callbacks and simulated tests. It is not yet a c
 
 Authorization Tests
 
-The test file is agentGuard.test.js.
+The test file is "agentGuard.test.js".
 
 It contains five tests:
 
@@ -163,15 +154,10 @@ All five tests passed during development.
 Expected test output:
 
 PASS: BLOCK prevents signing
-
 PASS: WARN requires human approval
-
 PASS: WARN without approval callback prevents signing
-
 PASS: WARN proceeds after human approval
-
 PASS: ALLOW proceeds without approval
-
 SENTINEL AI: ALL 5 TESTS PASSED
 
 These tests use simulated signing callbacks. They do not broadcast real blockchain transactions.
@@ -201,9 +187,9 @@ The project also includes a NEAR Testnet access-key demonstration.
 
 Test account:
 
-sentinel-lab-2026.testnet
+"sentinel-lab-2026.testnet"
 
-A FunctionCall access key was configured for the account's own contract and the set_message method.
+A FunctionCall access key was configured for the account's own contract and the "set_message" method.
 
 The restricted key successfully called the authorized method. An attempt to call an unauthorized method was rejected.
 
@@ -215,15 +201,15 @@ This demonstrates NEAR protocol permission enforcement. It is separate from the 
 
 Project Files
 
-- index.html: Main dashboard.
-- sentinel.js: Account inspection, risk scoring, blocklist checks and contract fingerprint comparison.
-- agentGuard.js: ALLOW, WARN and BLOCK authorization wrapper.
-- agentGuard.test.js: Five authorization tests.
-- attackDemo.js: Controlled prompt-injection attack simulation.
-- Test-attack.html: Separate attack demonstration page.
-- Blocklist.json: Shared confirmed-recipient blocklist.
-- test-fixtures/Blocklist.test.json: Test-only blocklist fixture.
-- Backend/worker.js: Cloudflare Worker source mirror.
+- "index.html": Main dashboard.
+- "sentinel.js": Account inspection, risk scoring, blocklist checks and contract fingerprint comparison.
+- "agentGuard.js": ALLOW, WARN and BLOCK authorization wrapper.
+- "agentGuard.test.js": Five authorization tests.
+- "attackDemo.js": Controlled prompt-injection attack simulation.
+- "Test-attack.html": Separate attack demonstration page.
+- "Blocklist.json": Shared confirmed-recipient blocklist.
+- "test-fixtures/Blocklist.test.json": Test-only blocklist fixture.
+- "Backend/worker.js": Cloudflare Worker source mirror.
 
 Limitations and Security Notes
 
@@ -246,17 +232,21 @@ Sentinel AI should not be used as the sole security control for real funds.
 Demo and Resources
 
 Live Demo:
+
 https://nostrings-cyber.github.io/sentinel-ai./
 
 GitHub Repository:
+
 https://github.com/Nostrings-cyber/sentinel-ai.
 
 NEAR Testnet Account:
-sentinel-lab-2026.testnet
+
+"sentinel-lab-2026.testnet"
 
 Testnet Transaction:
+
 https://explorer.testnet.near.org/transactions/9KHQywizXaEfw21c6dqifhjsP6EiScAdAFkBMtA7UYNA
 
 License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License. See the "LICENSE" file for details.
