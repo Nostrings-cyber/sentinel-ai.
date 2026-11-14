@@ -31,7 +31,10 @@ export async function inspectNearAccount(accountId) {
     });
 
     if (!response.ok) {
-  const errorBody = await response.text().catch(() => "");
+  throw new Error("NEAR account request failed. HTTP " + response.status);
+}
+
+const data = await response.json();
 
   throw new Error(
     "Independent RPC HTTP " +
