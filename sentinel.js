@@ -152,54 +152,88 @@ let independentKeyCheckError = "No error";
       console.error("NEAR access-key check:", error);
     }
 
-    // 3. Independently retrieve access keys from FastNEAR
+        // 3. Independently retrieve access keys from FastNEAR
     let independentKeyInfo = {
       total: null,
       available: false
     };
 
     try {
-      const verifyResponse = await fetch(FASTNEAR_RPC, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "sentinel-verification",
-          method: "query",
-          params: {
-            request_type: "view_access_key_list",
-            finality: "final",
-            account_id: id
-          }
-        })
-      });
+      let independentKeys = [];
+      let independentAfterKey = null;
+      let independentBlockHeight = null;
+      let independentPageCount = 0;
 
-      if (!verifyResponse.ok) {
-        throw new Error("FastNEAR request failed.");
-      }
+      do {
+        const params = {
+          request_type: "view_access_key_list",
+          account_id: id,
+          limit: 100
+        };
 
-      const verifyData = await verifyResponse.json();
+        if (independentBlockHeight === null) {
+          params.finality = "final";
+        } else {
+          params.block_id = independentBlockHeight;
+          params.after_key = independentAfterKey;
+        }
 
-      if (
-        verifyData.error ||
-        !Array.isArray(verifyData.result?.keys)
-      ) {
-        throw new Error("FastNEAR key data unavailable.");
-      }
+        const verifyResponse = await fetch(FASTNEAR_RPC, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "sentinel-verification",
+            method: "query",
+            params
+          })
+        });
 
-      independentKeyInfo.total =
-        verifyData.result.keys.length;
+        if (!verifyResponse.ok) {
+          throw new Error("FastNEAR request failed.");
+        }
 
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.error) {
+          throw new Error(
+            "FastNEAR RPC error: " +
+            JSON.stringify(verifyData.error).slice(0, 500)
+          );
+        }
+
+        if (!Array.isArray(verifyData.result?.keys)) {
+          throw new Error("FastNEAR returned invalid key data.");
+        }
+
+        if (independentBlockHeight === null) {
+          independentBlockHeight =
+            verifyData.result.block_height;
+        }
+
+        independentKeys.push(...verifyData.result.keys);
+        independentAfterKey =
+          verifyData.result.last_key ?? null;
+
+        independentPageCount++;
+
+        if (independentPageCount > 1000) {
+          throw new Error("FastNEAR pagination safety limit reached.");
+        }
+
+      } while (independentAfterKey);
+
+      independentKeyInfo.total = independentKeys.length;
       independentKeyInfo.available = true;
 
     } catch (error) {
-  independentKeyCheckError =
-    error instanceof Error ? error.message : String(error);
+      independentKeyCheckError =
+        error instanceof Error ? error.message : String(error);
 
-  console.error("FastNEAR verification:", error);
-}
+      console.error("FastNEAR verification:", error);
+    }
 
     // 4. Compare both results
     let verificationStatus = "UNAVAILABLE";
