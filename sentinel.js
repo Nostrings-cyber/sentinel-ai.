@@ -57,6 +57,85 @@ export async function inspectNearAccount(accountId) {
 let keyCheckError = "No error";
 let independentKeyCheckError = "No error";
 
+const independentKeyCheckPromise = (async () => {
+  let independentKeys = [];
+  let independentAfterKey = null;
+  let independentBlockHeight = null;
+  let independentPageCount = 0;
+
+  try {
+    do {
+      const params = {
+        request_type: "view_access_key_list",
+        account_id: id,
+        limit: 100
+      };
+
+      if (independentBlockHeight === null) {
+        params.finality = "final";
+      } else {
+        params.block_id = independentBlockHeight;
+        params.after_key = independentAfterKey;
+      }
+
+      const response = await fetch(FASTNEAR_RPC, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "sentinel-verification",
+          method: "query",
+          params
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Independent RPC request failed.");
+      }
+
+      const result = await response.json();
+
+      if (result.error || !Array.isArray(result.result?.keys)) {
+        throw new Error(
+          "Independent RPC error: " +
+          JSON.stringify(result.error ?? "Invalid key data").slice(0, 500)
+        );
+      }
+
+      if (independentBlockHeight === null) {
+        independentBlockHeight = result.result.block_height;
+      }
+
+      independentKeys.push(...result.result.keys);
+      independentAfterKey = result.result.last_key ?? null;
+      independentPageCount++;
+
+      if (independentPageCount > 1000) {
+        throw new Error("Independent RPC pagination limit reached.");
+      }
+
+    } while (independentAfterKey);
+
+    return {
+      total: independentKeys.length,
+      available: true
+    };
+
+  } catch (error) {
+    independentKeyCheckError =
+      error instanceof Error ? error.message : String(error);
+
+    console.error("Independent RPC verification:", error);
+
+    return {
+      total: null,
+      available: false
+    };
+  }
+})();
+
         try {
       let allKeys = [];
       let afterKey = null;
@@ -152,88 +231,8 @@ let independentKeyCheckError = "No error";
       console.error("NEAR access-key check:", error);
     }
 
-        // 3. Independently retrieve access keys from FastNEAR
-    let independentKeyInfo = {
-      total: null,
-      available: false
-    };
-
-    try {
-      let independentKeys = [];
-      let independentAfterKey = null;
-      let independentBlockHeight = null;
-      let independentPageCount = 0;
-
-      do {
-        const params = {
-          request_type: "view_access_key_list",
-          account_id: id,
-          limit: 100
-        };
-
-        if (independentBlockHeight === null) {
-          params.finality = "final";
-        } else {
-          params.block_id = independentBlockHeight;
-          params.after_key = independentAfterKey;
-        }
-
-        const verifyResponse = await fetch(FASTNEAR_RPC, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: "sentinel-verification",
-            method: "query",
-            params
-          })
-        });
-
-        if (!verifyResponse.ok) {
-          throw new Error("FastNEAR request failed.");
-        }
-
-        const verifyData = await verifyResponse.json();
-
-        if (verifyData.error) {
-          throw new Error(
-            "FastNEAR RPC error: " +
-            JSON.stringify(verifyData.error).slice(0, 500)
-          );
-        }
-
-        if (!Array.isArray(verifyData.result?.keys)) {
-          throw new Error("FastNEAR returned invalid key data.");
-        }
-
-        if (independentBlockHeight === null) {
-          independentBlockHeight =
-            verifyData.result.block_height;
-        }
-
-        independentKeys.push(...verifyData.result.keys);
-        independentAfterKey =
-          verifyData.result.last_key ?? null;
-
-        independentPageCount++;
-
-        if (independentPageCount > 1000) {
-          throw new Error("FastNEAR pagination safety limit reached.");
-        }
-
-      } while (independentAfterKey);
-
-      independentKeyInfo.total = independentKeys.length;
-      independentKeyInfo.available = true;
-
-    } catch (error) {
-      independentKeyCheckError =
-        error instanceof Error ? error.message : String(error);
-
-      console.error("FastNEAR verification:", error);
-    }
+       // 3. Collect independent RPC result
+let independentKeyInfo = await independentKeyCheckPromise;
 
     // 4. Compare both results
     let verificationStatus = "UNAVAILABLE";
