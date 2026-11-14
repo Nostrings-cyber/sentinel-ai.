@@ -81,12 +81,19 @@ let independentKeyCheckError = "No error";
 
       const keyData = await keyResponse.json();
 
-      if (
-        keyData.error ||
-        !Array.isArray(keyData.result?.keys)
-      ) {
-        throw new Error("NEAR access-key data unavailable.");
-      }
+      if (keyData.error) {
+  throw new Error(
+    "NEAR RPC error: " +
+    (keyData.error.message || JSON.stringify(keyData.error))
+  );
+}
+
+if (!Array.isArray(keyData.result?.keys)) {
+  throw new Error(
+    "Unexpected NEAR response: " +
+    JSON.stringify(keyData.result ?? keyData).slice(0, 300)
+  );
+}
 
       const keys = keyData.result.keys;
 
