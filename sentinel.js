@@ -57,67 +57,100 @@ export async function inspectNearAccount(accountId) {
 let keyCheckError = "No error";
 let independentKeyCheckError = "No error";
 
-    try {
-      const keyResponse = await fetch(NEAR_RPC, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "sentinel-keys",
-          method: "query",
-          params: {
-            request_type: "view_access_key_list",
-            finality: "final",
-            account_id: id,
-            limit: 100
-          }
-        })
-      });
+        try {
+      let allKeys = [];
+      let afterKey = null;
+      let blockHeight = null;
+      let pageCount = 0;
 
-      if (!keyResponse.ok) {
-        throw new Error("NEAR access-key request failed.");
-      }
+      do {
+        const params = {
+          request_type: "view_access_key_list",
+          account_id: id,
+          limit: 100
+        };
 
-      const keyData = await keyResponse.json();
+        if (blockHeight === null) {
+          params.finality = "final";
+        } else {
+          params.block_id = blockHeight;
+          params.after_key = afterKey;
+        }
 
-      if (keyData.error) {
-  throw new Error(
-  "NEAR RPC error: " +
-  JSON.stringify(keyData.error).slice(0, 500)
-);
-}
+        const keyResponse = await fetch(NEAR_RPC, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "sentinel-keys",
+            method: "query",
+            params
+          })
+        });
 
-if (!Array.isArray(keyData.result?.keys)) {
-  throw new Error(
-    "Unexpected NEAR response: " +
-    JSON.stringify(keyData.result ?? keyData).slice(0, 300)
-  );
-}
+        if (!keyResponse.ok) {
+          throw new Error("NEAR access-key request failed.");
+        }
 
-      const keys = keyData.result.keys;
+        const keyData = await keyResponse.json();
 
-      keyInfo.total = keys.length;
+        if (keyData.error) {
+          throw new Error(
+            "NEAR RPC error: " +
+            JSON.stringify(keyData.error).slice(0, 500)
+          );
+        }
 
-      keyInfo.fullAccess = keys.filter(
-        key => key.access_key?.permission === "FullAccess"
-      ).length;
+        if (!Array.isArray(keyData.result?.keys)) {
+          throw new Error(
+            "Unexpected NEAR response: " +
+            JSON.stringify(keyData.result ?? keyData).slice(0, 300)
+          );
+        }
 
-      keyInfo.functionCall = keys.filter(
-        key =>
-          typeof key.access_key?.permission === "object" &&
-          key.access_key.permission?.FunctionCall
-      ).length;
+        if (blockHeight === null) {
+          blockHeight = keyData.result.block_height;
+        }
+
+        allKeys.push(...keyData.result.keys);
+        afterKey = keyData.result.last_key ?? null;
+        pageCount++;
+
+        if (pageCount > 1000) {
+          throw new Error("Access-key pagination safety limit reached.");
+        }
+
+      } while (afterKey);
+
+      keyInfo.total = allKeys.length;
+
+      keyInfo.fullAccess = allKeys.filter(key => {
+        const permission = key.access_key?.permission;
+
+        return permission === "FullAccess" ||
+          permission?.GasKeyFullAccess !== undefined;
+      }).length;
+
+      keyInfo.functionCall = allKeys.filter(key => {
+        const permission = key.access_key?.permission;
+
+        return typeof permission === "object" &&
+          (
+            permission?.FunctionCall !== undefined ||
+            permission?.GasKeyFunctionCall !== undefined
+          );
+      }).length;
 
       keyInfo.available = true;
 
     } catch (error) {
-  keyCheckError =
-    error instanceof Error ? error.message : String(error);
+      keyCheckError =
+        error instanceof Error ? error.message : String(error);
 
-  console.error("NEAR access-key check:", error);
-}
+      console.error("NEAR access-key check:", error);
+    }
 
     // 3. Independently retrieve access keys from FastNEAR
     let independentKeyInfo = {
