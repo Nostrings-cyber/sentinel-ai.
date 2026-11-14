@@ -391,15 +391,18 @@ export async function testBlocklistIntegration(accountId) {
 export async function assessRecipientRisk(accountId, signals = {}) {
   const blocklist = await checkMaliciousRecipient(accountId);
 
-  const risk = calculateRiskScore({
-    ...signals,
-    knownMalicious:
-      blocklist.status === "BLOCKLISTED"
-        ? true
-        : blocklist.status === "CLEAR"
-          ? false
-          : undefined
-  });
+  const knownMalicious =
+  signals.knownMalicious === true ||
+  blocklist.status === "BLOCKLISTED"
+    ? true
+    : blocklist.status === "CLEAR"
+      ? false
+      : undefined;
+
+const risk = calculateRiskScore({
+  ...signals,
+  knownMalicious
+});
 
   return { ...risk, blocklist };
 }
