@@ -37,11 +37,11 @@ export async function inspectNearAccount(accountId) {
     const data = await response.json();
 
     if (data.error || !data.result) {
-      return {
-        status: "NOT_FOUND",
-        message: "Account could not be found on NEAR."
-      };
-    }
+  return {
+    status: "ERROR",
+    message: "NEAR could not complete the account lookup. Please try again."
+  };
+}
 
     // 2. Retrieve access keys from NEAR RPC
     let keyInfo = {
