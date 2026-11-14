@@ -37,9 +37,12 @@ export async function inspectNearAccount(accountId) {
     const data = await response.json();
 
     if (data.error || !data.result) {
+  console.error("Sentinel RPC response:", data);
+
   return {
     status: "ERROR",
-    message: "NEAR could not complete the account lookup. Please try again."
+    message: data.error?.message ||
+      "RPC returned no account result. Check browser console."
   };
 }
 
